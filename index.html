@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>华夏锋彩1.0 - AI互动影游</title>
+<title>华夏锋彩1.2 - AI互动影游</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,7 +14,7 @@
     <div class="logo-wrap">
       <div class="logo-icon">华</div>
       <h1 class="title-main">华夏锋彩</h1>
-      <p class="title-ver">1.0</p>
+      <p class="title-ver">1.2</p>
       <p class="title-sub">AI 互动影游 · INTERACTIVE CINEMA</p>
     </div>
 
@@ -57,13 +57,15 @@
 <div id="game-screen" class="screen">
   <div class="game-container">
     <div id="scene-image" class="scene-image">
+      <!-- 双层图片容器实现流畅过渡 -->
+      <div id="img-layer-a" class="img-layer active"></div>
+      <div id="img-layer-b" class="img-layer"></div>
       <div class="scene-overlay"></div>
       <div id="particles" class="particles"></div>
       <div class="lens-flare"></div>
       <div class="vignette"></div>
       <div class="film-grain"></div>
       <div id="scene-badge" class="scene-badge"></div>
-      <!-- 扫描线（真人模式） -->
       <div id="scanlines" class="scanlines hidden"></div>
     </div>
 
@@ -79,8 +81,9 @@
     <div class="status-bar">
       <span class="brand-mark">华夏锋彩</span>
       <span id="chapter-info">第1章</span>
-      <button id="volume-btn" class="volume-btn" title="音量">🔊</button>
-      <button id="restart-btn" class="restart-btn">⟳</button>
+      <button id="voice-btn" class="status-btn" title="角色语音">🗣️</button>
+      <button id="volume-btn" class="status-btn" title="音量">🔊</button>
+      <button id="restart-btn" class="status-btn restart-btn" title="重新开始">⟳</button>
     </div>
   </div>
 </div>

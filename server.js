@@ -1,5 +1,7 @@
 /**
- * AI影游生成器 - 后端服务（Railway 兼容版）
+ * 华夏锋彩 1.2 - 后端服务
+ * + TTS 语音代理
+ * + 图片缓存代理
  */
 
 const http = require('http');
@@ -19,33 +21,42 @@ const MIME_TYPES = {
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.svg': 'image/svg+xml',
+  '.mp3': 'audio/mpeg',
 };
+
+// ===== 图片缓存 =====
+const imgCache = new Map();
+const IMG_CACHE_MAX = 30;
 
 function serveStatic(req, res) {
   let filePath = req.url === '/' ? '/index.html' : req.url;
-  // 去掉查询参数
   filePath = filePath.split('?')[0];
   filePath = path.join(__dirname, filePath);
-  
+
   if (!filePath.startsWith(__dirname)) {
     res.writeHead(403);
     return res.end('Forbidden');
   }
-  
+
   const ext = path.extname(filePath);
   const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-  
+
   fs.readFile(filePath, (err, data) => {
     if (err) {
       res.writeHead(404);
       res.end('Not Found');
       return;
     }
-    res.writeHead(200, { 'Content-Type': contentType });
+    // 静态资源缓存 1 小时
+    res.writeHead(200, {
+      'Content-Type': contentType,
+      'Cache-Control': 'public, max-age=3600',
+    });
     res.end(data);
   });
 }
 
+// ===== 调用大模型 =====
 async function callLLM(messages) {
   if (!API_KEY) throw new Error('未配置 API_KEY');
 
@@ -70,23 +81,77 @@ async function callLLM(messages) {
   return data.choices[0].message.content;
 }
 
+// ===== 图片代理（解决跨域 + 缓存） =====
+async function proxyImage(req, res) {
+  const urlStr = decodeURIComponent(req.url.replace('/api/image?url=', ''));
+  if (!urlStr) {
+    res.writeHead(400);
+    return res.end('Missing url');
+  }
+
+  // 缓存检查
+  if (imgCache.has(urlStr)) {
+    const cached = imgCache.get(urlStr);
+    res.writeHead(200, {
+      'Content-Type': cached.type || 'image/png',
+      'Cache-Control': 'public, max-age=86400',
+      'X-Cache': 'HIT',
+    });
+    return res.end(cached.data);
+  }
+
+  try {
+    const r = await fetch(urlStr);
+    if (!r.ok) throw new Error(`upstream ${r.status}`);
+    const buf = Buffer.from(await r.arrayBuffer());
+    const type = r.headers.get('content-type') || 'image/png';
+
+    // 存缓存
+    if (imgCache.size >= IMG_CACHE_MAX) {
+      const firstKey = imgCache.keys().next().value;
+      imgCache.delete(firstKey);
+    }
+    imgCache.set(urlStr, { data: buf, type });
+
+    res.writeHead(200, {
+      'Content-Type': type,
+      'Cache-Control': 'public, max-age=86400',
+      'X-Cache': 'MISS',
+    });
+    res.end(buf);
+  } catch (err) {
+    res.writeHead(502);
+    res.end(JSON.stringify({ error: err.message }));
+  }
+}
+
+// ===== TTS 语音代理（浏览器 SpeechSynthesis 的备选） =====
+// 使用 Web Speech API 在前端实现，后端仅作备选
+// 如果未来接 Edge TTS 等服务可在此扩展
+
+// ===== HTTP 服务器 =====
 const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
+
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
     return res.end();
   }
 
-  // 健康检查（Railway 需要）
+  // 健康检查
   if (req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({ status: 'ok', model: MODEL }));
+    return res.end(JSON.stringify({ status: 'ok', model: MODEL, version: '1.2' }));
   }
 
-  // API
+  // 图片代理
+  if (req.method === 'GET' && req.url.startsWith('/api/image?url=')) {
+    return proxyImage(req, res);
+  }
+
+  // 故事 API
   if (req.method === 'POST' && req.url === '/api/story') {
     try {
       const body = await readBody(req);
@@ -116,5 +181,5 @@ function readBody(req) {
 }
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🎬 AI影游已启动 PORT=${PORT} MODEL=${MODEL}`);
+  console.log(`🎬 华夏锋彩 1.2 已启动 PORT=${PORT} MODEL=${MODEL}`);
 });
