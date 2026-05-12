@@ -163,7 +163,7 @@ body {
   background-position: center;
   position: relative;
   min-height: 35vh;
-  transition: background-image 1s ease;
+  transition: opacity 1.2s ease, background-image 1.5s ease;
 }
 .scene-overlay {
   position: absolute;
