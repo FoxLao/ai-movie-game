@@ -1,0 +1,137 @@
+.game-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #0a0a0f;
+}
+
+/* 场景图 */
+.scene-image {
+  height: 30vh;
+  min-height: 300rpx;
+  position: relative;
+  overflow: hidden;
+}
+.scene-overlay {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 70%;
+  background: linear-gradient(transparent, rgba(10,10,15,1));
+}
+.scene-badge {
+  position: absolute;
+  top: 24rpx;
+  left: 24rpx;
+  background: rgba(108,92,231,0.6);
+  color: #fff;
+  font-size: 24rpx;
+  padding: 8rpx 20rpx;
+  border-radius: 20rpx;
+}
+
+/* 剧情区 */
+.story-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 24rpx 32rpx 0;
+  overflow: hidden;
+}
+
+.scene-title {
+  font-size: 24rpx;
+  color: #6c5ce7;
+  letter-spacing: 4rpx;
+  margin-bottom: 16rpx;
+}
+
+.story-scroll {
+  flex: 1;
+  max-height: 40vh;
+}
+
+.story-text {
+  font-size: 30rpx;
+  line-height: 1.9;
+  color: #d0d0d0;
+  white-space: pre-wrap;
+  padding-right: 10rpx;
+}
+
+.cursor {
+  color: #6c5ce7;
+  animation: blink 1s infinite;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* 选项 */
+.choices {
+  padding: 24rpx 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+.choice-btn {
+  background: rgba(108,92,231,0.08);
+  border: 2rpx solid rgba(108,92,231,0.25);
+  color: #c0c0e0;
+  padding: 28rpx 32rpx;
+  border-radius: 16rpx;
+  font-size: 28rpx;
+  line-height: 1.6;
+}
+.choice-btn-active {
+  background: rgba(108,92,231,0.25) !important;
+  border-color: rgba(108,92,231,0.5) !important;
+  color: #fff !important;
+  transform: scale(0.98);
+}
+
+/* 状态栏 */
+.status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 32rpx;
+  background: rgba(0,0,0,0.5);
+  padding-bottom: calc(16rpx + env(safe-area-inset-bottom));
+}
+.status-text {
+  font-size: 24rpx;
+  color: #555;
+}
+.restart-btn {
+  font-size: 24rpx;
+  color: #555;
+  border: 2rpx solid #333;
+  padding: 8rpx 24rpx;
+  border-radius: 20rpx;
+}
+
+/* 加载 */
+.loading-mask {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(10,10,15,0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.loading-spinner {
+  width: 60rpx; height: 60rpx;
+  border: 4rpx solid rgba(108,92,231,0.2);
+  border-top-color: #6c5ce7;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 24rpx;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text {
+  color: #888;
+  font-size: 26rpx;
+}
