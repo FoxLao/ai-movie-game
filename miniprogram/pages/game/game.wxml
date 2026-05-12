@@ -1,0 +1,43 @@
+<view class="game-page">
+  <!-- 场景图 -->
+  <view class="scene-image" style="background: {{sceneColor}};">
+    <view class="scene-overlay"></view>
+    <view class="scene-badge">{{sceneName}}</view>
+  </view>
+
+  <!-- 剧情区 -->
+  <view class="story-panel">
+    <view class="scene-title">第{{chapter}}章</view>
+    
+    <!-- 打字机文字 -->
+    <scroll-view class="story-scroll" scroll-y scroll-into-view="{{scrollTarget}}">
+      <view class="story-text">{{displayText}}<text wx:if="{{isTyping}}" class="cursor">|</text></view>
+      <view id="scroll-bottom"></view>
+    </scroll-view>
+
+    <!-- 选项 -->
+    <view class="choices" wx:if="{{showChoices}}">
+      <view class="choice-btn"
+        wx:for="{{choices}}"
+        wx:key="key"
+        bindtap="makeChoice"
+        data-index="{{index}}"
+        hover-class="choice-btn-active"
+      >
+        {{item.text}}
+      </view>
+    </view>
+  </view>
+
+  <!-- 状态栏 -->
+  <view class="status-bar">
+    <text class="status-text">选择: {{choiceCount}}</text>
+    <view class="restart-btn" bindtap="restartGame">⟳ 重来</view>
+  </view>
+
+  <!-- 加载遮罩 -->
+  <view class="loading-mask" wx:if="{{isLoading}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">{{loadingText}}</text>
+  </view>
+</view>
