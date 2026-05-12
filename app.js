@@ -1,5 +1,5 @@
 // ===== 配置 =====
-const API_URL = '/api/story';  // 后端 API 地址
+const API_URL = '/api/story';
 
 // ===== 状态 =====
 let gameState = {
@@ -7,7 +7,7 @@ let gameState = {
   theme: '',
   chapter: 1,
   choiceCount: 0,
-  history: [],       // { role, content }
+  history: [],
   sceneCount: 0,
   isTyping: false,
 };
@@ -57,17 +57,14 @@ $('#replay-btn').addEventListener('click', resetGame);
 
 // ===== 游戏核心 =====
 async function startGame() {
-  // 切换画面
   $('#start-screen').classList.remove('active');
   $('#game-screen').classList.add('active');
   $('#chapter-info').textContent = '第1章';
   $('#choice-count').textContent = '选择: 0';
   
-  // 构建系统提示
   const systemPrompt = buildSystemPrompt();
   gameState.history = [{ role: 'system', content: systemPrompt }];
   
-  // 请求开场
   await requestScene('开始游戏');
 }
 
@@ -85,9 +82,11 @@ function buildSystemPrompt() {
 5. 根据玩家的所有历史选择影响剧情走向
 6. 场景描写要有画面感，包含环境、声音、气味等感官细节
 7. 在开头用 【场景名】标注当前场景名称
+8. 在场景名之后，用 【画面：xxx】用一句英文描述这个场景的画面，用于AI生成配图
 
 【输出格式】严格按以下格式：
 【场景名】xxx
+【画面】A dark corridor with flickering lights, cinematic style, 8k
 
 （场景描写文字）
 
@@ -115,15 +114,13 @@ async function requestScene(userChoice) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        messages: gameState.history.slice(-10), // 最近10条上下文
+        messages: gameState.history.slice(-10),
       }),
     });
     
     const data = await response.json();
     
-    if (data.error) {
-      throw new Error(data.error);
-    }
+    if (data.error) throw new Error(data.error);
     
     const storyText = data.content;
     gameState.history.push({ role: 'assistant', content: storyText });
@@ -131,7 +128,12 @@ async function requestScene(userChoice) {
     
     hideLoading();
     
-    // 检查是否结局
+    // 提取画面描述并生成图片
+    const imagePrompt = extractImagePrompt(storyText);
+    if (imagePrompt) {
+      generateSceneImage(imagePrompt);
+    }
+    
     if (storyText.includes('【THE END】') || storyText.includes('结局')) {
       await showScene(storyText, true);
     } else {
@@ -141,48 +143,75 @@ async function requestScene(userChoice) {
   } catch (err) {
     hideLoading();
     console.error('API Error:', err);
-    showError('故事生成失败: ' + err.message + '\n\n请检查后端服务是否启动。');
+    showError('故事生成失败: ' + err.message);
   }
 }
 
-// ===== 场景展示（打字机效果）=====
+// ===== 图片生成 =====
+function extractImagePrompt(text) {
+  const match = text.match(/【画面】(.+)/);
+  if (match) return match[1].trim();
+  
+  // 如果没有【画面】标签，从场景描述自动生成
+  const sceneMatch = text.match(/【场景名】(.+)/);
+  if (sceneMatch) {
+    const sceneName = sceneMatch[1].trim();
+    return `${gameState.genre} style, ${sceneName}, cinematic, moody lighting, 8k`;
+  }
+  return null;
+}
+
+function generateSceneImage(prompt) {
+  // 使用 pollinations.ai 免费生成图片
+  const seed = Math.floor(Math.random() * 999999);
+  const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1280&height=720&seed=${seed}&nologo=true`;
+  
+  const sceneImage = $('#scene-image');
+  
+  // 先添加淡出效果
+  sceneImage.style.opacity = '0.3';
+  
+  // 预加载图片
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    sceneImage.style.backgroundImage = `url(${imageUrl})`;
+    sceneImage.style.opacity = '1';
+  };
+  img.onerror = () => {
+    // 图片加载失败，保持渐变背景
+    sceneImage.style.opacity = '1';
+  };
+  img.src = imageUrl;
+}
+
+// ===== 场景展示 =====
 async function showScene(text, isEnding) {
   gameState.isTyping = true;
   
-  // 解析场景名
   const sceneMatch = text.match(/【场景名】(.+)/);
   const sceneName = sceneMatch ? sceneMatch[1].trim() : `场景 ${gameState.sceneCount}`;
   
-  // 解析正文和选项
   const { narrative, choices } = parseStory(text);
   
-  // 更新场景标题
   $('#scene-title').textContent = sceneName;
   
-  // 打字机效果
   const storyEl = $('#story-text');
   const choicesEl = $('#choices');
   storyEl.innerHTML = '';
   choicesEl.innerHTML = '';
   
-  // 逐字显示
   for (let i = 0; i < narrative.length; i++) {
-    if (!gameState.isTyping) break; // 如果被中断
+    if (!gameState.isTyping) break;
     
     storyEl.innerHTML = narrative.substring(0, i + 1) + '<span class="cursor"></span>';
     
-    // 标点停顿
     const char = narrative[i];
-    if ('。！？…'.includes(char)) {
-      await sleep(200);
-    } else if ('，、；：'.includes(char)) {
-      await sleep(100);
-    } else {
-      await sleep(30);
-    }
+    if ('。！？…'.includes(char)) await sleep(200);
+    else if ('，、；：'.includes(char)) await sleep(100);
+    else await sleep(30);
   }
   
-  // 移除光标
   storyEl.innerHTML = narrative;
   
   if (isEnding) {
@@ -190,19 +219,14 @@ async function showScene(text, isEnding) {
     return;
   }
   
-  // 显示选项（带动画）
   for (let i = 0; i < choices.length; i++) {
     const btn = document.createElement('button');
     btn.className = 'choice-btn';
     btn.textContent = choices[i].text;
     btn.style.opacity = '0';
     btn.style.transform = 'translateY(10px)';
-    
     btn.addEventListener('click', () => handleChoice(choices[i]));
-    
     choicesEl.appendChild(btn);
-    
-    // 动画延迟
     await sleep(150);
     btn.style.transition = 'all 0.3s';
     btn.style.opacity = '1';
@@ -213,21 +237,16 @@ async function showScene(text, isEnding) {
 }
 
 function parseStory(text) {
-  // 提取选项
   const choiceRegex = /\[([A-C])\]\s*(.+)/g;
   const choices = [];
   let match;
-  
   while ((match = choiceRegex.exec(text)) !== null) {
-    choices.push({
-      key: match[1],
-      text: match[2].trim(),
-    });
+    choices.push({ key: match[1], text: match[2].trim() });
   }
   
-  // 提取正文（去掉场景名和选项）
   let narrative = text
     .replace(/【场景名】.+\n?/, '')
+    .replace(/【画面】.+\n?/, '')
     .replace(/\[[A-C]\].+/g, '')
     .replace(/【THE END】/g, '')
     .replace(/【结局[：:].+/g, '')
@@ -239,14 +258,9 @@ function parseStory(text) {
 function handleChoice(choice) {
   gameState.choiceCount++;
   gameState.chapter = Math.floor(gameState.choiceCount / 3) + 1;
-  
   $('#chapter-info').textContent = `第${gameState.chapter}章`;
   $('#choice-count').textContent = `选择: ${gameState.choiceCount}`;
-  
-  // 清空选项
   $('#choices').innerHTML = '';
-  
-  // 发送选择
   requestScene(`我选择 ${choice.key}：${choice.text}`);
 }
 
@@ -254,11 +268,14 @@ function handleChoice(choice) {
 function showEnding(narrative, fullText) {
   gameState.isTyping = false;
   
+  // 结局也生成一张图
+  const imagePrompt = extractImagePrompt(fullText);
+  if (imagePrompt) generateSceneImage(imagePrompt);
+  
   setTimeout(() => {
     $('#game-screen').classList.remove('active');
     $('#ending-screen').classList.add('active');
     
-    // 结局类型
     let endingType = '普通结局';
     if (fullText.includes('好')) endingType = '✨ 好结局';
     else if (fullText.includes('坏')) endingType = '💀 坏结局';
@@ -285,6 +302,11 @@ function resetGame() {
   $('#theme-input').value = '';
   $('#story-text').innerHTML = '';
   $('#choices').innerHTML = '';
+  
+  // 重置场景图
+  const sceneImage = $('#scene-image');
+  sceneImage.style.backgroundImage = '';
+  sceneImage.style.opacity = '1';
 }
 
 // ===== UI Helpers =====
@@ -298,20 +320,16 @@ function hideLoading() {
 }
 
 function showError(msg) {
-  const storyEl = $('#story-text');
-  storyEl.innerHTML = `<span style="color:#ff6b6b">${msg}</span>`;
-  
-  const choicesEl = $('#choices');
-  choicesEl.innerHTML = '';
+  $('#story-text').innerHTML = `<span style="color:#ff6b6b">${msg}</span>`;
+  $('#choices').innerHTML = '';
   const btn = document.createElement('button');
   btn.className = 'choice-btn';
   btn.textContent = '🔄 重试';
   btn.addEventListener('click', () => {
-    gameState.history.pop(); // 移除失败的请求
+    gameState.history.pop();
     requestScene('继续故事');
   });
-  choicesEl.appendChild(btn);
-  
+  $('#choices').appendChild(btn);
   gameState.isTyping = false;
 }
 
