@@ -1,0 +1,12 @@
+{
+  "name": "ai-movie-game",
+  "version": "1.0.0",
+  "description": "AI 影游生成器 - 互动叙事 H5",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
