@@ -16,6 +16,21 @@ let gameState = {
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
 
+// ===== 3D动漫风格关键词 =====
+const STYLE_3D_ANIME = '3D anime style, cel shading, Studio Ghibli inspired, Pixar quality, volumetric lighting, cinematic composition, dramatic atmosphere, rich colors, ultra detailed, 8k render';
+
+// ===== Ken Burns 动画效果库 =====
+const KEN_BURNS = [
+  'kb-zoom-in',
+  'kb-zoom-out', 
+  'kb-pan-left',
+  'kb-pan-right',
+  'kb-pan-up',
+  'kb-pan-down',
+  'kb-rotate-zoom',
+  'kb-dramatic-zoom',
+];
+
 // ===== 启动画面逻辑 =====
 let selectedGenre = null;
 
@@ -43,12 +58,10 @@ $('#theme-input').addEventListener('input', () => {
 
 $('#start-btn').addEventListener('click', () => {
   if (!selectedGenre) return;
-  
   gameState.genre = selectedGenre;
   gameState.theme = selectedGenre === '自由' 
     ? $('#theme-input').value.trim() 
     : $(`.genre-btn.selected`).dataset.desc;
-  
   startGame();
 });
 
@@ -64,12 +77,11 @@ async function startGame() {
   
   const systemPrompt = buildSystemPrompt();
   gameState.history = [{ role: 'system', content: systemPrompt }];
-  
   await requestScene('开始游戏');
 }
 
 function buildSystemPrompt() {
-  return `你是一个专业的互动影游剧本引擎。
+  return `你是一个专业的互动影游剧本引擎，擅长创作电影级画面的故事。
 
 【类型】${gameState.genre}
 【主题】${gameState.theme}
@@ -82,17 +94,23 @@ function buildSystemPrompt() {
 5. 根据玩家的所有历史选择影响剧情走向
 6. 场景描写要有画面感，包含环境、声音、气味等感官细节
 7. 在开头用 【场景名】标注当前场景名称
-8. 在场景名之后，用 【画面：xxx】用一句英文描述这个场景的画面，用于AI生成配图
+8. 在场景名之后，用 【画面】用英文描述3D动漫风格的画面，要具体详细，包含光影、氛围、构图
 
 【输出格式】严格按以下格式：
 【场景名】xxx
-【画面】A dark corridor with flickering lights, cinematic style, 8k
+【画面】A mysterious girl standing at the edge of a floating island, wind blowing her hair, sunset glow, magical particles in the air, 3D anime style, cinematic wide shot
 
 （场景描写文字）
 
 [A] 选项一
 [B] 选项二
 [C] 选项三
+
+【画面描述要求】
+- 用英文描述
+- 包含主体、环境、光影、氛围
+- 适合3D动漫风格渲染
+- 像电影分镜一样描述构图
 
 【结局规则】
 - 当玩家做出第8-12个选择后，根据选择质量决定结局
@@ -106,20 +124,16 @@ async function requestScene(userChoice) {
   if (gameState.isTyping) return;
   
   gameState.history.push({ role: 'user', content: userChoice });
-  
-  showLoading('AI 正在编织故事...');
+  showLoading('🎬 AI 正在生成电影级画面...');
   
   try {
     const response = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages: gameState.history.slice(-10),
-      }),
+      body: JSON.stringify({ messages: gameState.history.slice(-10) }),
     });
     
     const data = await response.json();
-    
     if (data.error) throw new Error(data.error);
     
     const storyText = data.content;
@@ -128,11 +142,9 @@ async function requestScene(userChoice) {
     
     hideLoading();
     
-    // 提取画面描述并生成图片
+    // 生成3D动漫场景
     const imagePrompt = extractImagePrompt(storyText);
-    if (imagePrompt) {
-      generateSceneImage(imagePrompt);
-    }
+    if (imagePrompt) generateSceneImage(imagePrompt);
     
     if (storyText.includes('【THE END】') || storyText.includes('结局')) {
       await showScene(storyText, true);
@@ -147,42 +159,79 @@ async function requestScene(userChoice) {
   }
 }
 
-// ===== 图片生成 =====
+// ===== 图片/视频生成 =====
 function extractImagePrompt(text) {
   const match = text.match(/【画面】(.+)/);
-  if (match) return match[1].trim();
-  
-  // 如果没有【画面】标签，从场景描述自动生成
+  if (match) {
+    return `${match[1].trim()}, ${STYLE_3D_ANIME}`;
+  }
   const sceneMatch = text.match(/【场景名】(.+)/);
   if (sceneMatch) {
-    const sceneName = sceneMatch[1].trim();
-    return `${gameState.genre} style, ${sceneName}, cinematic, moody lighting, 8k`;
+    return `${sceneMatch[1].trim()}, ${gameState.genre} theme, ${STYLE_3D_ANIME}`;
   }
   return null;
 }
 
 function generateSceneImage(prompt) {
-  // 使用 pollinations.ai 免费生成图片
   const seed = Math.floor(Math.random() * 999999);
-  const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1280&height=720&seed=${seed}&nologo=true`;
+  const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1280&height=720&seed=${seed}&nologo=true&model=flux`;
   
   const sceneImage = $('#scene-image');
   
-  // 先添加淡出效果
-  sceneImage.style.opacity = '0.3';
+  // 清除旧的 Ken Burns 动画
+  KEN_BURNS.forEach(cls => sceneImage.classList.remove(cls));
   
-  // 预加载图片
+  // 随机选择新的动画
+  const animClass = KEN_BURNS[Math.floor(Math.random() * KEN_BURNS.length)];
+  
+  // 淡出
+  sceneImage.style.opacity = '0';
+  
+  // 重置粒子
+  updateParticles(gameState.genre);
+  
   const img = new Image();
   img.crossOrigin = 'anonymous';
   img.onload = () => {
     sceneImage.style.backgroundImage = `url(${imageUrl})`;
+    sceneImage.classList.add(animClass);
     sceneImage.style.opacity = '1';
   };
   img.onerror = () => {
-    // 图片加载失败，保持渐变背景
     sceneImage.style.opacity = '1';
   };
   img.src = imageUrl;
+}
+
+// ===== 粒子效果 =====
+function updateParticles(genre) {
+  const container = $('#particles');
+  container.innerHTML = '';
+  
+  const configs = {
+    '科幻': { count: 30, colors: ['#00d4ff', '#6c5ce7', '#a855f7'], size: 3, speed: 2 },
+    '悬疑': { count: 15, colors: ['#ff6b6b', '#ffa502', '#eee'], size: 2, speed: 1 },
+    '古风': { count: 20, colors: ['#ffa502', '#ff6348', '#ff9ff3'], size: 4, speed: 1.5 },
+    '恋爱': { count: 25, colors: ['#ff6b9d', '#c44569', '#f8a5c2'], size: 5, speed: 1.2 },
+    '恐怖': { count: 12, colors: ['#2ed573', '#a4b0be', '#747d8c'], size: 2, speed: 0.8 },
+    '自由': { count: 20, colors: ['#6c5ce7', '#a855f7', '#00d4ff'], size: 3, speed: 1.5 },
+  };
+  
+  const config = configs[genre] || configs['自由'];
+  
+  for (let i = 0; i < config.count; i++) {
+    const particle = document.createElement('div');
+    particle.className = 'particle';
+    particle.style.left = Math.random() * 100 + '%';
+    particle.style.top = Math.random() * 100 + '%';
+    particle.style.width = config.size + 'px';
+    particle.style.height = config.size + 'px';
+    particle.style.background = config.colors[Math.floor(Math.random() * config.colors.length)];
+    particle.style.animationDuration = (3 + Math.random() * 5) / config.speed + 's';
+    particle.style.animationDelay = Math.random() * 3 + 's';
+    particle.style.opacity = 0.3 + Math.random() * 0.5;
+    container.appendChild(particle);
+  }
 }
 
 // ===== 场景展示 =====
@@ -191,7 +240,6 @@ async function showScene(text, isEnding) {
   
   const sceneMatch = text.match(/【场景名】(.+)/);
   const sceneName = sceneMatch ? sceneMatch[1].trim() : `场景 ${gameState.sceneCount}`;
-  
   const { narrative, choices } = parseStory(text);
   
   $('#scene-title').textContent = sceneName;
@@ -203,13 +251,11 @@ async function showScene(text, isEnding) {
   
   for (let i = 0; i < narrative.length; i++) {
     if (!gameState.isTyping) break;
-    
     storyEl.innerHTML = narrative.substring(0, i + 1) + '<span class="cursor"></span>';
-    
     const char = narrative[i];
-    if ('。！？…'.includes(char)) await sleep(200);
-    else if ('，、；：'.includes(char)) await sleep(100);
-    else await sleep(30);
+    if ('。！？…'.includes(char)) await sleep(180);
+    else if ('，、；：'.includes(char)) await sleep(80);
+    else await sleep(25);
   }
   
   storyEl.innerHTML = narrative;
@@ -268,7 +314,6 @@ function handleChoice(choice) {
 function showEnding(narrative, fullText) {
   gameState.isTyping = false;
   
-  // 结局也生成一张图
   const imagePrompt = extractImagePrompt(fullText);
   if (imagePrompt) generateSceneImage(imagePrompt);
   
@@ -293,7 +338,6 @@ function resetGame() {
     genre: '', theme: '', chapter: 1,
     choiceCount: 0, history: [], sceneCount: 0, isTyping: false,
   };
-  
   $$('.screen').forEach(s => s.classList.remove('active'));
   $('#start-screen').classList.add('active');
   $('#custom-theme').classList.add('hidden');
@@ -303,10 +347,11 @@ function resetGame() {
   $('#story-text').innerHTML = '';
   $('#choices').innerHTML = '';
   
-  // 重置场景图
   const sceneImage = $('#scene-image');
+  KEN_BURNS.forEach(cls => sceneImage.classList.remove(cls));
   sceneImage.style.backgroundImage = '';
   sceneImage.style.opacity = '1';
+  $('#particles').innerHTML = '';
 }
 
 // ===== UI Helpers =====
