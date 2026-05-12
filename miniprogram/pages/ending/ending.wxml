@@ -1,0 +1,20 @@
+<view class="ending-page">
+  <view class="ending-content">
+    <view class="ending-icon">🎬</view>
+    <view class="ending-title">故事结束</view>
+    
+    <scroll-view class="ending-scroll" scroll-y>
+      <view class="ending-text">{{endingText}}</view>
+    </scroll-view>
+
+    <view class="ending-stats">
+      <text class="stat-line">你做出了 {{choiceCount}} 个选择</text>
+      <text class="stat-line ending-type">{{endingType}}</text>
+    </view>
+
+    <view class="ending-actions">
+      <button class="replay-btn" bindtap="replay">🔄 再来一次</button>
+      <button class="share-btn" open-type="share">📤 分享给好友</button>
+    </view>
+  </view>
+</view>
