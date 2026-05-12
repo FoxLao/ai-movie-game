@@ -1,0 +1,43 @@
+<view class="container">
+  <view class="title">影游生成器</view>
+  <view class="subtitle">AI 驱动 · 互动叙事</view>
+
+  <view class="genre-grid">
+    <view class="genre-btn {{selectedGenre==='科幻'?'active':''}}" bindtap="selectGenre" data-genre="科幻" data-desc="星际航行、AI觉醒、末日求生">
+      <text class="genre-icon">🚀</text>
+      <text>科幻</text>
+    </view>
+    <view class="genre-btn {{selectedGenre==='悬疑'?'active':''}}" bindtap="selectGenre" data-genre="悬疑" data-desc="密室逃脱、案件调查、心理惊悚">
+      <text class="genre-icon">🔍</text>
+      <text>悬疑</text>
+    </view>
+    <view class="genre-btn {{selectedGenre==='古风'?'active':''}}" bindtap="selectGenre" data-genre="古风" data-desc="江湖恩怨、宫廷权谋、修仙问道">
+      <text class="genre-icon">⚔️</text>
+      <text>古风</text>
+    </view>
+    <view class="genre-btn {{selectedGenre==='恋爱'?'active':''}}" bindtap="selectGenre" data-genre="恋爱" data-desc="校园邂逅、都市情缘、前世今生">
+      <text class="genre-icon">💕</text>
+      <text>恋爱</text>
+    </view>
+    <view class="genre-btn {{selectedGenre==='恐怖'?'active':''}}" bindtap="selectGenre" data-genre="恐怖" data-desc="鬼屋探险、都市传说、灵异事件">
+      <text class="genre-icon">👻</text>
+      <text>恐怖</text>
+    </view>
+    <view class="genre-btn {{selectedGenre==='自由'?'active':''}}" bindtap="selectGenre" data-genre="自由" data-desc="">
+      <text class="genre-icon">✨</text>
+      <text>自定义</text>
+    </view>
+  </view>
+
+  <input wx:if="{{selectedGenre==='自由'}}"
+    class="custom-input"
+    placeholder="输入你想要的主题..."
+    placeholder-style="color:#666"
+    value="{{customTheme}}"
+    bindinput="onThemeInput"
+  />
+
+  <view class="start-btn {{canStart?'':'disabled'}}" bindtap="startGame">
+    开始冒险
+  </view>
+</view>
