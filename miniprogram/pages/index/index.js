@@ -7,6 +7,8 @@ Page({
 
   selectGenre(e) {
     const genre = e.currentTarget.dataset.genre;
+    const desc = e.currentTarget.dataset.desc;
+    this._genreDesc = desc || '';
     this.setData({
       selectedGenre: genre,
       canStart: genre !== '自由',
@@ -15,9 +17,11 @@ Page({
   },
 
   onThemeInput(e) {
+    const val = e.detail.value.trim();
+    this._genreDesc = val;
     this.setData({
       customTheme: e.detail.value,
-      canStart: e.detail.value.trim().length > 0,
+      canStart: val.length > 0,
     });
   },
 
@@ -26,13 +30,10 @@ Page({
 
     const app = getApp();
     const genre = this.data.selectedGenre;
-    const desc = this.data.selectedGenre === '自由'
-      ? this.data.customTheme
-      : e.currentTarget.dataset.desc || genre;
+    const theme = this._genreDesc || genre;
 
-    // 存到全局
     app.globalData.genre = genre;
-    app.globalData.theme = desc || genre;
+    app.globalData.theme = theme;
     app.globalData.chapter = 1;
     app.globalData.choiceCount = 0;
     app.globalData.history = [];

@@ -2,8 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>影游生成器</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>华夏锋彩1.0 - AI互动影游</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,66 +11,105 @@
 <!-- 启动画面 -->
 <div id="start-screen" class="screen active">
   <div class="start-content">
-    <h1 class="glitch" data-text="影游生成器">影游生成器</h1>
-    <p class="subtitle">AI 驱动 · 互动叙事</p>
-    
+    <div class="logo-wrap">
+      <div class="logo-icon">华</div>
+      <h1 class="title-main">华夏锋彩</h1>
+      <p class="title-ver">1.0</p>
+      <p class="title-sub">AI 互动影游 · INTERACTIVE CINEMA</p>
+    </div>
+
+    <!-- 画面风格 -->
+    <div class="section-label">画面风格</div>
+    <div class="style-select">
+      <button class="style-btn selected" data-style="3d-anime">
+        <span class="style-icon">🎭</span>
+        <span class="style-name">3D动漫</span>
+        <span class="style-desc">吉卜力/Pixar风</span>
+      </button>
+      <button class="style-btn" data-style="realistic">
+        <span class="style-icon">🎬</span>
+        <span class="style-name">AI真人</span>
+        <span class="style-desc">电影级写实</span>
+      </button>
+    </div>
+
+    <!-- 题材 -->
+    <div class="section-label">选择题材</div>
     <div class="genre-select">
-      <button class="genre-btn" data-genre="科幻" data-desc="星际航行、AI觉醒、末日求生">🚀 科幻</button>
-      <button class="genre-btn" data-genre="悬疑" data-desc="密室逃脱、案件调查、心理惊悚">🔍 悬疑</button>
-      <button class="genre-btn" data-genre="古风" data-desc="江湖恩怨、宫廷权谋、修仙问道">⚔️ 古风</button>
-      <button class="genre-btn" data-genre="恋爱" data-desc="校园邂逅、都市情缘、前世今生">💕 恋爱</button>
-      <button class="genre-btn" data-genre="恐怖" data-desc="鬼屋探险、都市传说、灵异事件">👻 恐怖</button>
-      <button class="genre-btn" data-genre="自由" data-desc="输入你想要的任何主题">✨ 自定义</button>
+      <button class="genre-btn" data-genre="科幻" data-desc="星际航行、AI觉醒、末日求生">🚀<span>科幻</span></button>
+      <button class="genre-btn" data-genre="悬疑" data-desc="密室逃脱、案件调查、心理惊悚">🔍<span>悬疑</span></button>
+      <button class="genre-btn" data-genre="古风" data-desc="江湖恩怨、宫廷权谋、修仙问道">⚔️<span>古风</span></button>
+      <button class="genre-btn" data-genre="恋爱" data-desc="校园邂逅、都市情缘、前世今生">💕<span>恋爱</span></button>
+      <button class="genre-btn" data-genre="历史" data-desc="王朝兴衰、英雄传奇、战争史诗">🏛️<span>历史</span></button>
+      <button class="genre-btn" data-genre="自由" data-desc="">✨<span>自定义</span></button>
     </div>
 
     <div id="custom-theme" class="hidden">
-      <input type="text" id="theme-input" placeholder="输入你的主题，如：在末日废墟中寻找失落的记忆..." />
+      <input type="text" id="theme-input" placeholder="输入你想要的主题..." maxlength="100" />
     </div>
 
     <button id="start-btn" class="start-btn" disabled>开始冒险</button>
+    <p class="hint">选择题材后开始</p>
   </div>
 </div>
 
 <!-- 游戏画面 -->
 <div id="game-screen" class="screen">
   <div class="game-container">
-    <!-- 场景图 -->
     <div id="scene-image" class="scene-image">
       <div class="scene-overlay"></div>
+      <div id="particles" class="particles"></div>
+      <div class="lens-flare"></div>
+      <div class="vignette"></div>
+      <div class="film-grain"></div>
+      <div id="scene-badge" class="scene-badge"></div>
+      <!-- 扫描线（真人模式） -->
+      <div id="scanlines" class="scanlines hidden"></div>
     </div>
 
-    <!-- 剧情文字 -->
     <div id="story-panel" class="story-panel">
-      <div id="scene-title" class="scene-title"></div>
+      <div class="chapter-bar">
+        <span id="scene-title" class="scene-title"></span>
+        <span id="choice-count" class="choice-badge">0</span>
+      </div>
       <div id="story-text" class="story-text"></div>
       <div id="choices" class="choices"></div>
     </div>
 
-    <!-- 状态栏 -->
     <div class="status-bar">
+      <span class="brand-mark">华夏锋彩</span>
       <span id="chapter-info">第1章</span>
-      <span id="choice-count">选择: 0</span>
-      <button id="restart-btn" class="restart-btn">⟳ 重新开始</button>
+      <button id="volume-btn" class="volume-btn" title="音量">🔊</button>
+      <button id="restart-btn" class="restart-btn">⟳</button>
     </div>
   </div>
 </div>
 
-<!-- 加载画面 -->
+<!-- 加载 -->
 <div id="loading-overlay" class="loading-overlay hidden">
-  <div class="loading-spinner"></div>
-  <p id="loading-text">AI 正在编织故事...</p>
+  <div class="loading-wrap">
+    <div class="loading-spinner"></div>
+    <p id="loading-text">🎬 AI 正在生成...</p>
+    <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+  </div>
 </div>
 
-<!-- 结局画面 -->
+<!-- 结局 -->
 <div id="ending-screen" class="screen">
+  <div id="ending-bg" class="ending-bg"></div>
   <div class="ending-content">
+    <div class="ending-icon">🎬</div>
     <h2 id="ending-title">故事结束</h2>
+    <div id="ending-type" class="ending-type-badge"></div>
     <div id="ending-text" class="ending-text"></div>
     <div class="ending-stats">
-      <p>你做出了 <span id="total-choices">0</span> 个选择</p>
-      <p id="ending-type"></p>
+      <div class="stat"><span class="stat-num" id="total-choices">0</span><span class="stat-label">次选择</span></div>
+      <div class="stat"><span class="stat-num" id="total-scenes">0</span><span class="stat-label">个场景</span></div>
     </div>
-    <button id="replay-btn" class="start-btn">再来一次</button>
+    <div class="ending-actions">
+      <button id="replay-btn" class="btn-primary">🔄 再来一次</button>
+      <button class="btn-secondary" onclick="shareResult()">📤 分享</button>
+    </div>
   </div>
 </div>
 
