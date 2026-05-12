@@ -1,0 +1,79 @@
+.ending-page {
+  height: 100vh;
+  background: linear-gradient(135deg, #0a0a1a, #1a0a2e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx;
+}
+
+.ending-content {
+  width: 100%;
+  text-align: center;
+}
+
+.ending-icon {
+  font-size: 80rpx;
+  margin-bottom: 24rpx;
+}
+
+.ending-title {
+  font-size: 52rpx;
+  color: #6c5ce7;
+  margin-bottom: 40rpx;
+  font-weight: 700;
+}
+
+.ending-scroll {
+  max-height: 40vh;
+  text-align: left;
+  margin-bottom: 40rpx;
+}
+
+.ending-text {
+  font-size: 28rpx;
+  line-height: 1.8;
+  color: #bbb;
+  white-space: pre-wrap;
+}
+
+.ending-stats {
+  margin-bottom: 40rpx;
+}
+.stat-line {
+  display: block;
+  font-size: 26rpx;
+  color: #666;
+  margin: 8rpx 0;
+}
+.ending-type {
+  color: #6c5ce7;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.ending-actions {
+  display: flex;
+  gap: 20rpx;
+  justify-content: center;
+}
+
+.replay-btn, .share-btn {
+  flex: 1;
+  max-width: 300rpx;
+  padding: 24rpx;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.replay-btn {
+  background: linear-gradient(135deg, #6c5ce7, #a855f7);
+  color: #fff;
+}
+
+.share-btn {
+  background: rgba(255,255,255,0.08);
+  color: #ccc;
+  border: 2rpx solid rgba(255,255,255,0.15);
+}
