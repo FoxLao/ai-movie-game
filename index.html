@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>影游生成器 - AI互动电影</title>
+<title>华夏锋彩1.0 - AI互动影游</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,10 +12,29 @@
 <div id="start-screen" class="screen active">
   <div class="start-content">
     <div class="logo-wrap">
-      <h1 class="glitch" data-text="影游">影游</h1>
-      <p class="logo-sub">INTERACTIVE CINEMA</p>
+      <div class="logo-icon">华</div>
+      <h1 class="title-main">华夏锋彩</h1>
+      <p class="title-ver">1.0</p>
+      <p class="title-sub">AI 互动影游 · INTERACTIVE CINEMA</p>
     </div>
-    
+
+    <!-- 画面风格 -->
+    <div class="section-label">画面风格</div>
+    <div class="style-select">
+      <button class="style-btn selected" data-style="3d-anime">
+        <span class="style-icon">🎭</span>
+        <span class="style-name">3D动漫</span>
+        <span class="style-desc">吉卜力/Pixar风</span>
+      </button>
+      <button class="style-btn" data-style="realistic">
+        <span class="style-icon">🎬</span>
+        <span class="style-name">AI真人</span>
+        <span class="style-desc">电影级写实</span>
+      </button>
+    </div>
+
+    <!-- 题材 -->
+    <div class="section-label">选择题材</div>
     <div class="genre-select">
       <button class="genre-btn" data-genre="科幻" data-desc="星际航行、AI觉醒、末日求生">🚀<span>科幻</span></button>
       <button class="genre-btn" data-genre="悬疑" data-desc="密室逃脱、案件调查、心理惊悚">🔍<span>悬疑</span></button>
@@ -37,7 +56,6 @@
 <!-- 游戏画面 -->
 <div id="game-screen" class="screen">
   <div class="game-container">
-    <!-- 3D动漫电影场景 -->
     <div id="scene-image" class="scene-image">
       <div class="scene-overlay"></div>
       <div id="particles" class="particles"></div>
@@ -45,9 +63,10 @@
       <div class="vignette"></div>
       <div class="film-grain"></div>
       <div id="scene-badge" class="scene-badge"></div>
+      <!-- 扫描线（真人模式） -->
+      <div id="scanlines" class="scanlines hidden"></div>
     </div>
 
-    <!-- 剧情文字 -->
     <div id="story-panel" class="story-panel">
       <div class="chapter-bar">
         <span id="scene-title" class="scene-title"></span>
@@ -57,24 +76,24 @@
       <div id="choices" class="choices"></div>
     </div>
 
-    <!-- 底部状态栏 -->
     <div class="status-bar">
+      <span class="brand-mark">华夏锋彩</span>
       <span id="chapter-info">第1章</span>
-      <button id="restart-btn" class="restart-btn">⟳ 重来</button>
+      <button id="restart-btn" class="restart-btn">⟳</button>
     </div>
   </div>
 </div>
 
-<!-- 加载画面 -->
+<!-- 加载 -->
 <div id="loading-overlay" class="loading-overlay hidden">
   <div class="loading-wrap">
     <div class="loading-spinner"></div>
-    <p id="loading-text">🎬 AI 正在生成电影级画面...</p>
+    <p id="loading-text">🎬 AI 正在生成...</p>
     <div class="loading-bar"><div class="loading-bar-fill"></div></div>
   </div>
 </div>
 
-<!-- 结局画面 -->
+<!-- 结局 -->
 <div id="ending-screen" class="screen">
   <div id="ending-bg" class="ending-bg"></div>
   <div class="ending-content">
@@ -83,14 +102,8 @@
     <div id="ending-type" class="ending-type-badge"></div>
     <div id="ending-text" class="ending-text"></div>
     <div class="ending-stats">
-      <div class="stat">
-        <span class="stat-num" id="total-choices">0</span>
-        <span class="stat-label">次选择</span>
-      </div>
-      <div class="stat">
-        <span class="stat-num" id="total-scenes">0</span>
-        <span class="stat-label">个场景</span>
-      </div>
+      <div class="stat"><span class="stat-num" id="total-choices">0</span><span class="stat-label">次选择</span></div>
+      <div class="stat"><span class="stat-num" id="total-scenes">0</span><span class="stat-label">个场景</span></div>
     </div>
     <div class="ending-actions">
       <button id="replay-btn" class="btn-primary">🔄 再来一次</button>
