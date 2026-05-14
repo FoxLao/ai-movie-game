@@ -1365,52 +1365,25 @@ async function requestScene(userChoice) {
 function extractPrompt(text) {
   const m = text.match(/【画面】(.+)/) || text.match(/\[Visual\]\s*(.+)/);
   const styleP = STYLES[state.visualStyle].prompt;
-  const ethnicityHint = currentLang === 'zh' ? ', East Asian/Chinese appearance, black hair, dark brown eyes, Chinese facial features' : '';
+  const ethnicityHint = currentLang === 'zh' ? ', East Asian appearance, black hair, dark eyes' : '';
 
-  // 真人模式：只用正面强化词，不用 NOT/NO 等否定词（Flux 模型会把否定词当正面引导）
-  const styleGuard = state.visualStyle === 'realistic'
-    ? ', real photograph of a real person, live action movie still, actual human actor, professional DSLR photo, hyperrealistic photography, flesh skin texture, real world setting, candid photograph'
-    : '';
+  const faceHint = state.visualStyle === 'realistic'
+    ? ', detailed face, natural proportions, symmetrical face, realistic skin texture'
+    : ', well proportioned anime face, clear features, moderate eyes, symmetrical face';
 
-  const faceDetail = state.visualStyle === 'realistic'
-    ? ', detailed facial features, sharp facial contours, clear defined eyes nose mouth, accurate human proportions, natural face shape, correct eye size, detailed skin pores, symmetrical face, photorealistic face rendering'
-    : ', well proportioned anime face, clear defined features, moderate eyes, correct proportions, symmetrical face';
-
-  const eyeFix = state.visualStyle === '2d-anime'
-    ? ', moderate anime eyes, not oversized, natural proportions'
-    : ', natural proportioned eyes, normal eye size, realistic eye-to-face ratio';
-
-  if (m) return `${m[1].trim()}, ${styleP}${styleGuard}${ethnicityHint}${faceDetail}${eyeFix}`;
+  if (m) return `${m[1].trim()}, ${styleP}${ethnicityHint}${faceHint}`;
   const s = text.match(/【场景名】(.+)/) || text.match(/\[Scene Name\]\s*(.+)/);
-  if (s) return `${s[1].trim()}, ${state.genre} theme, ${styleP}${styleGuard}${ethnicityHint}${faceDetail}${eyeFix}`;
+  if (s) return `${s[1].trim()}, ${state.genre} theme, ${styleP}${ethnicityHint}${faceHint}`;
   return null;
 }
 
 function generateImage(prompt, sceneText) {
   const seed = Date.now();
   const isMobile = window.innerWidth < 768;
-  const w = isMobile ? 1024 : 1920;
-  const h = isMobile ? 1365 : 1080;
+  const w = isMobile ? 896 : 1280;
+  const h = isMobile ? 1152 : 720;
 
-  // Bug 3 修复：对中国题材强制追加详细面部描述
-  const chineseGenres = ['古风', '历史'];
-  const enZhMap = {'scifi':'科幻','mystery':'悬疑','wuxia':'古风','romance':'恋爱','history':'历史','custom':'自由'};
-  const zhGenre = enZhMap[state.genre] || state.genre;
-  const needsChineseFace = currentLang === 'zh' || chineseGenres.includes(zhGenre);
-
-  // faceHint 区分风格：真人强化写实，动漫强化手绘
-  let faceHint;
-  if (state.visualStyle === 'realistic') {
-    faceHint = needsChineseFace
-      ? ', real Chinese person face, actual photograph of East Asian person, real skin pores, authentic Chinese facial features, photograph of a real Chinese man or woman, DSLR portrait, studio lighting on face'
-      : ', real human face, actual photograph, real skin pores, authentic human features, DSLR portrait, studio lighting on face';
-  } else {
-    faceHint = needsChineseFace
-      ? ', Chinese/East Asian anime character, black hair, dark brown eyes, Chinese facial bone structure, high cheekbones, epicanthic fold, yellow skin tone, natural eye proportions, detailed facial features, sharp focus on face'
-      : ', natural facial proportions, detailed facial features, sharp focus on face';
-  }
-
-  const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt + faceHint)}?width=${w}&height=${h}&seed=${seed}&nologo=true&model=flux&enhance=true`;
+  const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${w}&height=${h}&seed=${seed}&nologo=true&model=flux`;
   state.imageUrl = url;
   state.imageLoading = true;
 
@@ -1421,35 +1394,53 @@ function generateImage(prompt, sceneText) {
     setTimeout(() => flash.classList.remove('active'), 150);
   }
 
-  preloadImage(url).then(() => {
-    const nextLayer = state.imgLayer === 'a' ? 'b' : 'a';
-    const nextEl = document.getElementById(`img-layer-${nextLayer}`);
-    const currEl = document.getElementById(`img-layer-${state.imgLayer}`);
+  // 立即播放 CinemaFX 和更新动画，不依赖图片加载
+  CinemaFX.playEffect(sceneText);
+  if (sceneText && SceneAnim.running) {
+    SceneAnim.updateForScene(sceneText);
+  }
 
-    nextEl.style.backgroundImage = `url(${url})`;
-    nextEl.classList.add('active');
-    currEl.classList.remove('active');
+  // 带超时的图片加载
+  const IMG_TIMEOUT = 18000;
+  let settled = false;
 
-    const container = document.getElementById('scene-image');
-    KB.forEach(c => container.classList.remove(c));
-    container.classList.add(KB[Math.floor(Math.random() * KB.length)]);
+  const timeoutP = new Promise((_, reject) =>
+    setTimeout(() => { if (!settled) { settled = true; reject(new Error('timeout')); } }, IMG_TIMEOUT)
+  );
 
-    state.imgLayer = nextLayer;
-    state.imageLoading = false;
+  Promise.race([preloadImage(url), timeoutP])
+    .then(() => {
+      if (settled) return;
+      settled = true;
+      applyImage(url);
+    })
+    .catch(() => {
+      state.imageLoading = false;
+      // 超时/失败时用更小尺寸重试一次
+      if (!settled) {
+        settled = true;
+        const retryUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=768&height=432&seed=${seed}&nologo=true&model=flux`;
+        preloadImage(retryUrl).then(() => applyImage(retryUrl)).catch(() => {});
+      }
+    });
+}
 
-    // 播放过渡音效
-    SFX.transition();
+function applyImage(url) {
+  const nextLayer = state.imgLayer === 'a' ? 'b' : 'a';
+  const nextEl = document.getElementById(`img-layer-${nextLayer}`);
+  const currEl = document.getElementById(`img-layer-${state.imgLayer}`);
 
-    // Bug 2 修复：图片加载后根据场景文本更新动画
-    if (sceneText && SceneAnim.running) {
-      SceneAnim.updateForScene(sceneText);
-    }
+  nextEl.style.backgroundImage = `url(${url})`;
+  nextEl.classList.add('active');
+  currEl.classList.remove('active');
 
-    // v1.8: 尝试 AI 视频生成（非阻塞，失败静默回退）
-    CinemaFX.playEffect(sceneText);
-  }).catch(() => {
-    state.imageLoading = false;
-  });
+  const container = document.getElementById('scene-image');
+  KB.forEach(c => container.classList.remove(c));
+  container.classList.add(KB[Math.floor(Math.random() * KB.length)]);
+
+  state.imgLayer = nextLayer;
+  state.imageLoading = false;
+  SFX.transition();
 }
 
 // ===== Particles =====
