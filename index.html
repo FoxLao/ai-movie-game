@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>华夏锋彩1.2 - AI互动影游</title>
-<link rel="stylesheet" href="style.css">
+<title>华夏锋彩1.8 - AI互动影游</title>
+<link rel="stylesheet" href="style.css?v=1.8.14">
 </head>
 <body>
 
@@ -14,20 +14,26 @@
     <div class="logo-wrap">
       <div class="logo-icon">华</div>
       <h1 class="title-main">华夏锋彩</h1>
-      <p class="title-ver">1.2</p>
+      <p class="title-ver">1.8</p>
       <p class="title-sub">AI 互动影游 · INTERACTIVE CINEMA</p>
+    </div>
+
+    <!-- 语言切换 -->
+    <div class="lang-select">
+      <button class="lang-btn selected" data-lang="zh">中文</button>
+      <button class="lang-btn" data-lang="en">English</button>
     </div>
 
     <!-- 画面风格 -->
     <div class="section-label">画面风格</div>
     <div class="style-select">
-      <button class="style-btn selected" data-style="3d-anime">
-        <span class="style-icon">🎭</span>
-        <span class="style-name">3D动漫</span>
-        <span class="style-desc">吉卜力/Pixar风</span>
+      <button class="style-btn selected" data-style="2d-anime">
+        <span class="style-icon">🎬</span>
+        <span class="style-name">2D动漫</span>
+        <span class="style-desc">手绘/日漫风</span>
       </button>
       <button class="style-btn" data-style="realistic">
-        <span class="style-icon">🎬</span>
+        <span class="style-icon">🎭</span>
         <span class="style-name">AI真人</span>
         <span class="style-desc">电影级写实</span>
       </button>
@@ -60,6 +66,8 @@
       <!-- 双层图片容器实现流畅过渡 -->
       <div id="img-layer-a" class="img-layer active"></div>
       <div id="img-layer-b" class="img-layer"></div>
+      <!-- 场景动画 Canvas（替代视频） -->
+      <canvas id="scene-canvas" class="scene-canvas"></canvas>
       <div class="scene-overlay"></div>
       <div id="particles" class="particles"></div>
       <div class="lens-flare"></div>
@@ -67,11 +75,24 @@
       <div class="film-grain"></div>
       <div id="scene-badge" class="scene-badge"></div>
       <div id="scanlines" class="scanlines hidden"></div>
+      <!-- 场景闪光效果 -->
+      <div id="scene-flash" class="scene-flash"></div>
     </div>
 
     <div id="story-panel" class="story-panel">
       <div class="chapter-bar">
         <span id="scene-title" class="scene-title"></span>
+        <div class="chapter-progress" id="chapter-progress">
+          <span class="chapter-dot"></span>
+          <span class="chapter-dot"></span>
+          <span class="chapter-dot"></span>
+          <span class="chapter-dot"></span>
+          <span class="chapter-dot"></span>
+          <span class="chapter-dot"></span>
+          <span class="chapter-dot"></span>
+          <span class="chapter-dot"></span>
+          <span class="chapter-dot"></span>
+        </div>
         <span id="choice-count" class="choice-badge">0</span>
       </div>
       <div id="story-text" class="story-text"></div>
@@ -81,6 +102,9 @@
     <div class="status-bar">
       <span class="brand-mark">华夏锋彩</span>
       <span id="chapter-info">第1章</span>
+      <button id="font-down" class="status-btn font-btn" title="字体缩小">A-</button>
+      <span id="font-size-label" class="font-label">中</span>
+      <button id="font-up" class="status-btn font-btn" title="字体放大">A+</button>
       <button id="voice-btn" class="status-btn" title="角色语音">🗣️</button>
       <button id="volume-btn" class="status-btn" title="音量">🔊</button>
       <button id="restart-btn" class="status-btn restart-btn" title="重新开始">⟳</button>
@@ -103,6 +127,7 @@
   <div class="ending-content">
     <div class="ending-icon">🎬</div>
     <h2 id="ending-title">故事结束</h2>
+    <div id="ending-stars" class="ending-stars"></div>
     <div id="ending-type" class="ending-type-badge"></div>
     <div id="ending-text" class="ending-text"></div>
     <div class="ending-stats">
@@ -116,6 +141,6 @@
   </div>
 </div>
 
-<script src="app.js"></script>
+<script src="app.js?v=1.8.14"></script>
 </body>
 </html>

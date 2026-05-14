@@ -1,5 +1,5 @@
 /**
- * 华夏锋彩 1.2 - 后端服务
+ * 华夏锋彩 1.8 - 后端服务
  * + TTS 语音代理
  * + 图片缓存代理
  */
@@ -22,6 +22,9 @@ const MIME_TYPES = {
   '.jpg': 'image/jpeg',
   '.svg': 'image/svg+xml',
   '.mp3': 'audio/mpeg',
+  '.wav': 'audio/wav',
+  '.webp': 'image/webp',
+  '.ico': 'image/x-icon',
 };
 
 // ===== 图片缓存 =====
@@ -47,10 +50,13 @@ function serveStatic(req, res) {
       res.end('Not Found');
       return;
     }
-    // 静态资源缓存 1 小时
+    // 静态资源 - HTML 不缓存，JS/CSS 短缓存
+    const cacheHeaders = ext === '.html'
+      ? { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+      : { 'Cache-Control': 'public, max-age=300' };
     res.writeHead(200, {
       'Content-Type': contentType,
-      'Cache-Control': 'public, max-age=3600',
+      ...cacheHeaders,
     });
     res.end(data);
   });
@@ -125,10 +131,6 @@ async function proxyImage(req, res) {
   }
 }
 
-// ===== TTS 语音代理（浏览器 SpeechSynthesis 的备选） =====
-// 使用 Web Speech API 在前端实现，后端仅作备选
-// 如果未来接 Edge TTS 等服务可在此扩展
-
 // ===== HTTP 服务器 =====
 const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -143,7 +145,7 @@ const server = http.createServer(async (req, res) => {
   // 健康检查
   if (req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({ status: 'ok', model: MODEL, version: '1.2' }));
+    return res.end(JSON.stringify({ status: 'ok', model: MODEL, version: '1.8' }));
   }
 
   // 图片代理
@@ -181,5 +183,5 @@ function readBody(req) {
 }
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🎬 华夏锋彩 1.2 已启动 PORT=${PORT} MODEL=${MODEL}`);
+  console.log(`🎬 华夏锋彩 1.8 已启动 PORT=${PORT} MODEL=${MODEL}`);
 });

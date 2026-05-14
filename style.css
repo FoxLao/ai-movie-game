@@ -1,4 +1,4 @@
-/* ===== 华夏锋彩 1.2 样式 ===== */
+/* ===== 华夏锋彩 1.8 样式 — 毛玻璃+微3D+光影 ===== */
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%;overflow:hidden}
 body{font-family:-apple-system,'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif;background:#06060c;color:#e0e0e0;-webkit-tap-highlight-color:transparent}
@@ -15,39 +15,47 @@ body{font-family:-apple-system,'PingFang SC','Noto Sans SC','Microsoft YaHei',sa
 .start-content{text-align:center;padding:2rem 1.5rem;max-width:500px;width:100%;position:relative;z-index:1}
 
 .logo-wrap{margin-bottom:2rem}
-.logo-icon{display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#6c5ce7,#a855f7);color:#fff;font-size:1.8rem;font-weight:900;margin-bottom:12px;box-shadow:0 8px 32px rgba(108,92,231,0.3)}
+.logo-icon{display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#6c5ce7,#a855f7);color:#fff;font-size:1.8rem;font-weight:900;margin-bottom:12px;box-shadow:0 8px 32px rgba(108,92,231,0.4),0 2px 8px rgba(0,0,0,0.3),inset 0 2px 0 rgba(255,255,255,0.2),inset 0 -2px 0 rgba(0,0,0,0.15)}
 .title-main{font-size:2.6rem;font-weight:900;color:#fff;letter-spacing:6px;line-height:1.2}
 .title-ver{font-size:0.8rem;color:#6c5ce7;letter-spacing:4px;margin-top:4px}
 .title-sub{color:#555;font-size:0.72rem;letter-spacing:5px;margin-top:8px}
 
+/* ===== Language Select ===== */
+.lang-select{display:flex;gap:8px;justify-content:center;margin-bottom:1rem}
+.lang-btn{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);color:#888;padding:6px 20px;border-radius:20px;font-size:0.8rem;cursor:pointer;transition:all 0.3s;box-shadow:0 2px 4px rgba(0,0,0,0.2),inset 0 1px 0 rgba(255,255,255,0.05)}
+.lang-btn:hover{border-color:rgba(108,92,231,0.3);color:#bbb}
+.lang-btn.selected{background:rgba(108,92,231,0.12);border-color:rgba(108,92,231,0.4);color:#fff;box-shadow:0 0 12px rgba(108,92,231,0.1),0 2px 8px rgba(0,0,0,0.2)}
+
 .section-label{color:#666;font-size:0.72rem;letter-spacing:3px;margin:1.2rem 0 0.6rem;text-transform:uppercase}
 
-/* Style Select */
+/* Style Select — 3D凸起 */
 .style-select{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:0.5rem}
-.style-btn{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px 10px;cursor:pointer;transition:all 0.3s;display:flex;flex-direction:column;align-items:center;gap:4px;color:#888}
+.style-btn{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:14px 10px;cursor:pointer;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);display:flex;flex-direction:column;align-items:center;gap:4px;color:#888;box-shadow:0 2px 4px rgba(0,0,0,0.3),0 4px 12px rgba(0,0,0,0.2),inset 0 1px 0 rgba(255,255,255,0.06);backdrop-filter:blur(10px);transform:translateZ(0)}
 .style-icon{font-size:1.6rem}
 .style-name{font-size:0.9rem;font-weight:600;color:#bbb}
 .style-desc{font-size:0.65rem;color:#555}
-.style-btn.selected{background:rgba(108,92,231,0.12);border-color:rgba(108,92,231,0.4);box-shadow:0 4px 20px rgba(108,92,231,0.1)}
+.style-btn.selected{background:rgba(108,92,231,0.12);border-color:rgba(108,92,231,0.4);box-shadow:0 0 20px rgba(108,92,231,0.15),0 4px 12px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.1)}
 .style-btn.selected .style-name{color:#fff}
-.style-btn:hover{border-color:rgba(108,92,231,0.3);transform:translateY(-2px)}
+.style-btn:hover{border-color:rgba(108,92,231,0.3);transform:translateY(-3px);box-shadow:0 6px 16px rgba(108,92,231,0.15),0 2px 4px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.08)}
 
-/* Genre */
+/* Genre — 3D凸起 */
 .genre-select{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.5rem}
-.genre-btn{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);color:#aaa;padding:16px 6px 12px;border-radius:14px;font-size:0.82rem;cursor:pointer;transition:all 0.3s;display:flex;flex-direction:column;align-items:center;gap:6px}
+.genre-btn{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:#aaa;padding:16px 6px 12px;border-radius:16px;font-size:0.82rem;cursor:pointer;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);display:flex;flex-direction:column;align-items:center;gap:6px;box-shadow:0 2px 4px rgba(0,0,0,0.3),0 4px 12px rgba(0,0,0,0.2),inset 0 1px 0 rgba(255,255,255,0.06);backdrop-filter:blur(10px);transform:translateZ(0)}
 .genre-btn span{font-size:0.75rem}
-.genre-btn:hover{background:rgba(108,92,231,0.08);border-color:rgba(108,92,231,0.25);transform:translateY(-2px)}
-.genre-btn.selected{background:rgba(108,92,231,0.12);border-color:rgba(108,92,231,0.45);color:#fff;box-shadow:0 4px 20px rgba(108,92,231,0.12);transform:translateY(-2px)}
+.genre-btn:hover{background:rgba(108,92,231,0.08);border-color:rgba(108,92,231,0.25);transform:translateY(-3px);box-shadow:0 6px 16px rgba(108,92,231,0.15),0 2px 4px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.08)}
+.genre-btn.selected{background:linear-gradient(135deg,rgba(108,92,231,0.15),rgba(168,85,247,0.1));border-color:rgba(108,92,231,0.5);color:#fff;box-shadow:0 0 20px rgba(108,92,231,0.15),0 4px 12px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.1);transform:translateY(-2px)}
 
 #custom-theme{margin-bottom:1.2rem;animation:fadeIn 0.3s}
-#theme-input{width:100%;padding:12px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;font-size:0.95rem;outline:none;transition:border-color 0.3s}
+#theme-input{width:100%;padding:12px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;font-size:0.95rem;outline:none;transition:border-color 0.3s;backdrop-filter:blur(8px)}
 #theme-input::placeholder{color:#444}
 #theme-input:focus{border-color:rgba(108,92,231,0.4)}
 
-.start-btn{background:linear-gradient(135deg,#6c5ce7,#a855f7);border:none;color:#fff;padding:15px 52px;border-radius:28px;font-size:1.05rem;cursor:pointer;transition:all 0.3s;font-weight:600;position:relative;overflow:hidden}
+/* 开始按钮 — 3D凸起+渐变光泽 */
+.start-btn{background:linear-gradient(135deg,#6c5ce7 0%,#a855f7 50%,#6c5ce7 100%);border:none;color:#fff;padding:15px 52px;border-radius:28px;font-size:1.05rem;cursor:pointer;transition:all 0.3s;font-weight:600;position:relative;overflow:hidden;box-shadow:0 4px 16px rgba(108,92,231,0.4),0 2px 4px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.2),inset 0 -2px 0 rgba(0,0,0,0.15)}
 .start-btn::after{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent);animation:shimmer 3s infinite}
 @keyframes shimmer{to{left:100%}}
-.start-btn:hover{transform:scale(1.04);box-shadow:0 0 36px rgba(108,92,231,0.25)}
+.start-btn:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 8px 32px rgba(108,92,231,0.5),0 4px 8px rgba(0,0,0,0.3)}
+.start-btn:active{transform:translateY(1px);box-shadow:0 1px 4px rgba(108,92,231,0.3)}
 .start-btn:disabled{opacity:0.25;cursor:not-allowed;transform:none;box-shadow:none}
 .start-btn:disabled::after{display:none}
 .hint{color:#333;font-size:0.72rem;margin-top:0.8rem}
@@ -56,24 +64,65 @@ body{font-family:-apple-system,'PingFang SC','Noto Sans SC','Microsoft YaHei',sa
 #game-screen{flex-direction:column;background:#06060c}
 .game-container{width:100%;height:100%;display:flex;flex-direction:column}
 
-.scene-image{flex:0 0 38vh;background:linear-gradient(135deg,#0f0f1e,#1a1040,#0f0f2e);background-size:cover;background-position:center;background-repeat:no-repeat;position:relative;overflow:hidden}
+.scene-image{flex:0 0 38vh;background:linear-gradient(135deg,#0f0f1e,#1a1040,#0f0f2e);background-size:cover;background-position:center;background-repeat:no-repeat;position:relative;overflow:hidden;box-shadow:inset 0 -30px 60px rgba(6,6,12,0.8)}
 
 /* 双层图片容器 — 流畅切换 */
-.img-layer{position:absolute;top:0;left:0;right:0;bottom:0;background-size:cover;background-position:center;background-repeat:no-repeat;opacity:0;transition:opacity 1.2s ease-in-out;will-change:opacity}
+.img-layer{position:absolute;top:0;left:0;right:0;bottom:0;background-size:cover;background-position:center;background-repeat:no-repeat;opacity:0;transition:opacity 1.5s cubic-bezier(0.4,0,0.2,1);will-change:opacity,background-size,background-position}
 .img-layer.active{opacity:1}
 
+/* 场景动画 Canvas */
+.scene-canvas{position:absolute;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:2;pointer-events:none;opacity:0;transition:opacity 1s ease}
+
+/* 电影级特效覆盖层 */
+.cinema-overlay{position:absolute;top:0;left:0;right:0;bottom:0;z-index:7;pointer-events:none;opacity:0;transition:opacity 0.5s ease;mix-blend-mode:overlay}
+.cinema-overlay.active{opacity:1;animation:cineVisible 0.5s ease-out}
+@keyframes cineVisible{0%{opacity:0}50%{opacity:1.5}100%{opacity:1}}
+@keyframes cineBreath{0%,100%{opacity:0.5}50%{opacity:1}}
+@keyframes cineFlash{0%{opacity:1}100%{opacity:0}}
+@keyframes cinePulse{0%,100%{opacity:0.3}50%{opacity:1}}
+@keyframes cineFadeIn{0%{opacity:0}100%{opacity:1}}
+@keyframes cineGlow{0%,100%{opacity:0.4}50%{opacity:1}}
+
+/* 真人模式更强的 film grain + 镜头光晕 */
+.realistic-mode .film-grain{opacity:0.06}
+.realistic-mode .lens-flare{opacity:0.8}
+.realistic-mode .vignette{background:radial-gradient(ellipse at center,transparent 30%,rgba(0,0,0,0.7) 100%)}
+
+/* v1.8: 视频播放层 */
+
+/* 角色对话动画 */
+.dialog-overlay{position:absolute;bottom:10%;left:5%;right:5%;z-index:15;pointer-events:none;opacity:0;transition:opacity 0.5s ease;display:flex;align-items:flex-end;gap:10px}
+.dialog-overlay.active{opacity:1}
+.dialog-avatar{width:56px;height:56px;border-radius:50%;flex-shrink:0;border:2px solid rgba(255,255,255,0.25);box-shadow:0 2px 12px rgba(0,0,0,0.5);background-size:cover;background-position:center;background-color:#1a1a2e;background-image:none;display:block;transition:background-image 0.3s}
+.dialog-content{flex:1;min-width:0}
+.dialog-name{font-size:0.78rem;font-weight:600;letter-spacing:1px;margin-bottom:3px;margin-left:4px;text-shadow:0 1px 3px rgba(0,0,0,0.5)}
+.dialog-bubble{background:rgba(0,0,0,0.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:11px 16px;color:#fff;font-size:0.92rem;line-height:1.55;box-shadow:0 4px 20px rgba(0,0,0,0.3)}
+.dialog-bubble.typing{animation:dialogFadeIn 0.3s ease-out}
+@keyframes dialogFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* 场景闪光效果 */
+.scene-flash{position:absolute;top:0;left:0;right:0;bottom:0;background:white;opacity:0;pointer-events:none;z-index:20;transition:opacity 0.1s}
+.scene-flash.active{opacity:0.08}
+
 .scene-overlay{position:absolute;bottom:0;left:0;right:0;height:100%;background:linear-gradient(transparent 25%,rgba(6,6,12,0.6) 65%,rgba(6,6,12,1) 100%);z-index:2}
-.scene-badge{position:absolute;top:14px;left:14px;background:rgba(108,92,231,0.65);backdrop-filter:blur(8px);color:#fff;font-size:0.68rem;letter-spacing:1.5px;padding:5px 12px;border-radius:16px;z-index:10;font-weight:600;max-width:75%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.scene-badge{position:absolute;top:14px;left:14px;background:rgba(108,92,231,0.55);backdrop-filter:blur(16px);color:#fff;font-size:0.68rem;letter-spacing:1.5px;padding:5px 12px;border-radius:16px;z-index:10;font-weight:600;max-width:75%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:1px solid rgba(255,255,255,0.08);box-shadow:0 4px 12px rgba(0,0,0,0.3)}
 
 /* 真人模式扫描线 */
 .scanlines{position:absolute;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px);z-index:7;pointer-events:none;animation:scanMove 8s linear infinite}
 .scanlines.hidden{display:none}
 @keyframes scanMove{0%{background-position:0 0}100%{background-position:0 100px}}
 
-.story-panel{flex:1;display:flex;flex-direction:column;padding:16px 18px 0;overflow:hidden;min-height:0}
-.chapter-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.story-panel{flex:1;display:flex;flex-direction:column;padding:16px 18px 0;overflow:hidden;min-height:0;position:relative}
+/* 故事面板顶部内发光 */
+.story-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:40px;background:linear-gradient(rgba(6,6,12,0.5),transparent);pointer-events:none;z-index:1}
+.chapter-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:6px}
 .scene-title{font-size:0.72rem;color:#6c5ce7;letter-spacing:2px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .choice-badge{background:rgba(108,92,231,0.12);color:#6c5ce7;font-size:0.65rem;padding:2px 8px;border-radius:8px;font-weight:600;flex-shrink:0}
+
+/* 章节进度指示器 */
+.chapter-progress{display:flex;gap:3px;align-items:center;flex-shrink:0}
+.chapter-dot{width:4px;height:4px;border-radius:50%;background:rgba(108,92,231,0.2);transition:all 0.3s}
+.chapter-dot.active{background:#6c5ce7;box-shadow:0 0 6px rgba(108,92,231,0.4)}
 
 .story-text{font-size:0.95rem;line-height:1.95;color:#c0c0d4;flex:1;white-space:pre-wrap;overflow-y:auto;padding-right:4px;margin-bottom:10px;-webkit-overflow-scrolling:touch;scroll-behavior:smooth}
 .story-text::-webkit-scrollbar{width:2px}
@@ -81,13 +130,15 @@ body{font-family:-apple-system,'PingFang SC','Noto Sans SC','Microsoft YaHei',sa
 .story-text .cursor{display:inline-block;width:2px;height:1em;background:#6c5ce7;animation:blink 0.8s infinite;vertical-align:text-bottom;margin-left:1px}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 
+/* 选项按钮 — 毛玻璃卡片 */
 .choices{display:flex;flex-direction:column;gap:8px;padding-bottom:6px}
-.choice-btn{background:rgba(108,92,231,0.05);border:1px solid rgba(108,92,231,0.18);color:#a8a8c8;padding:12px 14px;border-radius:10px;font-size:0.88rem;cursor:pointer;transition:all 0.25s;text-align:left;line-height:1.55;-webkit-tap-highlight-color:transparent}
-.choice-btn b{color:#6c5ce7;margin-right:4px}
-.choice-btn:hover{background:rgba(108,92,231,0.12);border-color:rgba(108,92,231,0.35);color:#fff;padding-left:20px}
+.choice-btn{background:rgba(255,255,255,0.03);border:1px solid rgba(108,92,231,0.15);border-radius:12px;backdrop-filter:blur(12px);color:#a8a8c8;padding:12px 14px;font-size:0.88rem;cursor:pointer;transition:all 0.25s;text-align:left;line-height:1.55;-webkit-tap-highlight-color:transparent;box-shadow:0 2px 8px rgba(0,0,0,0.2),inset 0 1px 0 rgba(255,255,255,0.04);display:flex;align-items:flex-start}
+.choice-btn b{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:rgba(108,92,231,0.15);color:#6c5ce7;font-size:0.75rem;margin-right:8px;flex-shrink:0}
+.choice-btn:hover{background:rgba(108,92,231,0.08);border-color:rgba(108,92,231,0.35);color:#fff;padding-left:20px;box-shadow:0 4px 20px rgba(108,92,231,0.15),inset 0 1px 0 rgba(255,255,255,0.08);transform:translateX(4px)}
 .choice-btn:active{transform:scale(0.98)}
 
-.status-bar{display:flex;align-items:center;gap:6px;padding:8px 18px;padding-bottom:calc(8px + env(safe-area-inset-bottom,0px));background:rgba(6,6,12,0.9);font-size:0.7rem;color:#444}
+/* 状态栏 — 毛玻璃 */
+.status-bar{display:flex;align-items:center;gap:6px;padding:8px 18px;padding-bottom:calc(8px + env(safe-area-inset-bottom,0px));background:rgba(6,6,12,0.85);backdrop-filter:blur(20px);border-top:1px solid rgba(108,92,231,0.1);font-size:0.7rem;color:#444}
 .brand-mark{color:#6c5ce7;font-weight:600;letter-spacing:1px;font-size:0.68rem;margin-right:auto}
 #chapter-info{color:#444;font-size:0.7rem}
 .status-btn{background:none;border:none;color:#444;cursor:pointer;font-size:1rem;padding:4px 6px;transition:all 0.2s;border-radius:6px}
@@ -95,8 +146,12 @@ body{font-family:-apple-system,'PingFang SC','Noto Sans SC','Microsoft YaHei',sa
 .status-btn:active{transform:scale(0.92)}
 .restart-btn{font-size:0.9rem;border:1px solid #222;padding:3px 10px;border-radius:10px}
 
-/* ===== Loading ===== */
-.loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(6,6,12,0.9);display:flex;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(4px)}
+/* 字体大小控制 */
+.font-btn{font-size:0.75rem !important;font-weight:700;padding:3px 8px !important}
+.font-label{font-size:0.65rem;color:#555;min-width:16px;text-align:center}
+
+/* ===== Loading — 毛玻璃 ===== */
+.loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;backdrop-filter:blur(12px);background:rgba(6,6,12,0.85);display:flex;align-items:center;justify-content:center;z-index:100}
 .loading-overlay.hidden{display:none}
 .loading-wrap{text-align:center}
 .loading-spinner{width:32px;height:32px;border:3px solid rgba(108,92,231,0.12);border-top-color:#6c5ce7;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 14px}
@@ -106,12 +161,18 @@ body{font-family:-apple-system,'PingFang SC','Noto Sans SC','Microsoft YaHei',sa
 .loading-bar-fill{height:100%;background:linear-gradient(90deg,#6c5ce7,#a855f7);border-radius:2px;animation:loadP 4s ease-in-out infinite}
 @keyframes loadP{0%{width:0;margin-left:0}50%{width:70%;margin-left:15%}100%{width:0;margin-left:100%}}
 
-/* ===== Ending ===== */
+/* ===== Ending — 毛玻璃卡片 ===== */
 #ending-screen{flex-direction:column;align-items:center;justify-content:center;background:#06060c;position:relative;overflow:hidden}
 .ending-bg{position:absolute;top:0;left:0;right:0;bottom:0;background-size:cover;background-position:center;filter:blur(24px) brightness(0.25);transform:scale(1.3);z-index:0}
-.ending-content{text-align:center;max-width:460px;padding:2rem;position:relative;z-index:1}
+.ending-content{text-align:center;max-width:460px;padding:2rem;position:relative;z-index:1;background:rgba(6,6,12,0.6);backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,0.05);border-radius:24px;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
 .ending-icon{font-size:3rem;margin-bottom:0.8rem}
 #ending-title{font-size:1.8rem;color:#fff;margin-bottom:0.6rem;font-weight:700}
+
+/* 星级评分 */
+.ending-stars{font-size:1.6rem;letter-spacing:4px;margin-bottom:0.5rem}
+.ending-star{color:#333;transition:color 0.3s}
+.ending-star.active{color:#ffd700;text-shadow:0 0 8px rgba(255,215,0,0.4)}
+
 .ending-type-badge{display:inline-block;padding:5px 18px;border-radius:16px;font-size:0.85rem;font-weight:600;margin-bottom:1.2rem}
 .ending-text{font-size:0.9rem;line-height:1.85;color:#999;margin-bottom:1.5rem;white-space:pre-wrap;max-height:28vh;overflow-y:auto;text-align:left}
 .ending-stats{display:flex;gap:2rem;justify-content:center;margin-bottom:1.5rem}
@@ -119,28 +180,28 @@ body{font-family:-apple-system,'PingFang SC','Noto Sans SC','Microsoft YaHei',sa
 .stat-num{display:block;font-size:1.6rem;color:#6c5ce7;font-weight:700}
 .stat-label{font-size:0.7rem;color:#555}
 .ending-actions{display:flex;gap:10px;justify-content:center}
-.btn-primary{background:linear-gradient(135deg,#6c5ce7,#a855f7);border:none;color:#fff;padding:13px 28px;border-radius:22px;font-size:0.9rem;cursor:pointer;font-weight:600;transition:all 0.3s}
-.btn-primary:hover{transform:scale(1.04)}
-.btn-secondary{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#999;padding:13px 28px;border-radius:22px;font-size:0.9rem;cursor:pointer;transition:all 0.3s}
+.btn-primary{background:linear-gradient(135deg,#6c5ce7,#a855f7);border:none;color:#fff;padding:13px 28px;border-radius:22px;font-size:0.9rem;cursor:pointer;font-weight:600;transition:all 0.3s;box-shadow:0 4px 16px rgba(108,92,231,0.4),0 2px 4px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.2),inset 0 -2px 0 rgba(0,0,0,0.15)}
+.btn-primary:hover{transform:translateY(-2px) scale(1.04);box-shadow:0 8px 32px rgba(108,92,231,0.5),0 4px 8px rgba(0,0,0,0.3)}
+.btn-secondary{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#999;padding:13px 28px;border-radius:22px;font-size:0.9rem;cursor:pointer;transition:all 0.3s;backdrop-filter:blur(8px)}
 .btn-secondary:hover{color:#ccc;border-color:rgba(255,255,255,0.25)}
 
-/* ===== Ken Burns ===== */
-.kb-zoom-in{animation:kbZI 8s ease-in-out infinite alternate}
-.kb-zoom-out{animation:kbZO 8s ease-in-out infinite alternate}
-.kb-pan-left{animation:kbPL 10s ease-in-out infinite alternate}
-.kb-pan-right{animation:kbPR 10s ease-in-out infinite alternate}
-.kb-pan-up{animation:kbPU 10s ease-in-out infinite alternate}
-.kb-rotate{animation:kbR 12s ease-in-out infinite alternate}
-.kb-dramatic{animation:kbD 6s ease-in-out infinite alternate}
-.kb-slow-zoom{animation:kbS 15s ease-in-out infinite alternate}
-@keyframes kbZI{0%{background-size:100%}100%{background-size:145%}}
-@keyframes kbZO{0%{background-size:145%}100%{background-size:100%}}
-@keyframes kbPL{0%{background-position:100% 50%;background-size:140%}100%{background-position:0% 50%;background-size:140%}}
-@keyframes kbPR{0%{background-position:0% 50%;background-size:140%}100%{background-position:100% 50%;background-size:140%}}
-@keyframes kbPU{0%{background-position:50% 100%;background-size:135%}100%{background-position:50% 0%;background-size:135%}}
-@keyframes kbR{0%{transform:scale(1) rotate(0deg);background-size:120%}100%{transform:scale(1.1) rotate(1.5deg);background-size:140%}}
-@keyframes kbD{0%{background-size:100%;background-position:50% 30%}50%{background-size:160%;background-position:50% 50%}100%{background-size:120%;background-position:50% 70%}}
-@keyframes kbS{0%{background-size:100%}100%{background-size:130%}}
+/* ===== Ken Burns — 更平滑 ===== */
+.kb-zoom-in{animation:kbZI 15s ease-in-out infinite alternate}
+.kb-zoom-out{animation:kbZO 15s ease-in-out infinite alternate}
+.kb-pan-left{animation:kbPL 18s ease-in-out infinite alternate}
+.kb-pan-right{animation:kbPR 18s ease-in-out infinite alternate}
+.kb-pan-up{animation:kbPU 18s ease-in-out infinite alternate}
+.kb-rotate{animation:kbR 20s ease-in-out infinite alternate}
+.kb-dramatic{animation:kbD 12s ease-in-out infinite alternate}
+.kb-slow-zoom{animation:kbS 25s ease-in-out infinite alternate}
+@keyframes kbZI{0%{background-size:100%;background-position:50% 50%}100%{background-size:155%;background-position:50% 50%}}
+@keyframes kbZO{0%{background-size:155%;background-position:50% 50%}100%{background-size:100%;background-position:50% 50%}}
+@keyframes kbPL{0%{background-position:100% 40%;background-size:145%}100%{background-position:0% 60%;background-size:145%}}
+@keyframes kbPR{0%{background-position:0% 60%;background-size:145%}100%{background-position:100% 40%;background-size:145%}}
+@keyframes kbPU{0%{background-position:50% 100%;background-size:140%}100%{background-position:50% 0%;background-size:140%}}
+@keyframes kbR{0%{transform:scale(1) rotate(0deg);background-size:125%}100%{transform:scale(1.15) rotate(1.5deg);background-size:145%}}
+@keyframes kbD{0%{background-size:100%;background-position:50% 30%}50%{background-size:165%;background-position:50% 55%}100%{background-size:125%;background-position:50% 75%}}
+@keyframes kbS{0%{background-size:100%;background-position:50% 50%}100%{background-size:135%;background-position:50% 50%}}
 
 /* ===== Particles ===== */
 .particles{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:3}
