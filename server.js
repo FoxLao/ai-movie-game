@@ -29,7 +29,7 @@ const MIME_TYPES = {
 
 // ===== 图片缓存 =====
 const imgCache = new Map();
-const IMG_CACHE_MAX = 30;
+const IMG_CACHE_MAX = 60;
 
 function serveStatic(req, res) {
   let filePath = req.url === '/' ? '/index.html' : req.url;
@@ -87,7 +87,7 @@ async function callLLM(messages) {
   return data.choices[0].message.content;
 }
 
-// ===== 图片代理（解决跨域 + 缓存） =====
+// ===== 图片代理（解决跨域 + 缓存 + 加速） =====
 async function proxyImage(req, res) {
   const urlStr = decodeURIComponent(req.url.replace('/api/image?url=', ''));
   if (!urlStr) {
@@ -107,7 +107,10 @@ async function proxyImage(req, res) {
   }
 
   try {
-    const r = await fetch(urlStr);
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 15000);
+    const r = await fetch(urlStr, { signal: ctrl.signal });
+    clearTimeout(t);
     if (!r.ok) throw new Error(`upstream ${r.status}`);
     const buf = Buffer.from(await r.arrayBuffer());
     const type = r.headers.get('content-type') || 'image/png';

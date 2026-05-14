@@ -1157,7 +1157,9 @@ function preloadImage(url) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
+    const timer = setTimeout(() => { img.src = ''; reject(new Error('img_timeout')); }, 25000);
     img.onload = () => {
+      clearTimeout(timer);
       if (imageCache.size >= IMAGE_CACHE_MAX) {
         const firstKey = imageCache.keys().next().value;
         imageCache.delete(firstKey);
@@ -1165,7 +1167,7 @@ function preloadImage(url) {
       imageCache.set(url, img);
       resolve(img);
     };
-    img.onerror = reject;
+    img.onerror = () => { clearTimeout(timer); reject(new Error('img_error')); };
     img.src = url;
   });
 }
@@ -1261,15 +1263,19 @@ document.getElementById('font-up').addEventListener('click', () => {
 // ===== System Prompt =====
 function getSystemPrompt() {
   const styleConfig = STYLES[state.visualStyle];
-  if (currentLang === 'en') {
-    return `You are "HuaXia Cinema" interactive movie engine. Create ${styleConfig.label} style cinematic stories.
+  // 英文模式统一 genre 名
+  const genreEn = { '科幻':'Sci-Fi','悬疑':'Mystery','古风':'Wuxia','恋爱':'Romance','历史':'History','自由':'Creative' };
+  const genreLabel = genreEn[state.genre] || state.genre;
 
-[Genre] ${state.genre}
+  if (currentLang === 'en') {
+    return `You are "HuaXia Cinema" interactive movie engine. Create ${styleConfig.label} style cinematic stories. IMPORTANT: Output ENTIRELY in English. Never use Chinese characters.
+
+[Genre] ${genreLabel}
 [Theme] ${state.theme}
 [Visual Style] ${styleConfig.label}
 
 [Core Rules]
-1. Use second person "you" narration, cinematic descriptions
+1. Use second person "you" narration, cinematic descriptions. ALL TEXT MUST BE IN ENGLISH.
 2. Each response: scene description (200-300 words) + 2-3 choices
 3. Mark choices with [A] [B] [C]
 4. Add a key plot twist every 3-4 choices
@@ -1277,7 +1283,8 @@ function getSystemPrompt() {
 6. Scenes must be vivid: environment, sound, lighting, atmosphere
 7. Character dialogue in quotes "like this", each character has distinct voice
 8. Start with [Scene Name]
-9. After scene name, use [Visual] for English image description (${styleConfig.label} style)
+9. After scene name, use [Visual] for image description (${styleConfig.label} style)
+10. NEVER output Chinese text. Always use English.
 
 [Output Format]
 [Scene Name] Title
@@ -1294,7 +1301,7 @@ Scene description...A character says "dialogue"...
   // 中文 prompt
   return `你是"华夏锋彩"互动影游引擎，创作${styleConfig.label}风格的电影级故事。
 
-【类型】${state.genre === '自由' ? '自由创作' : state.genre}
+【类型】${state.genre === '自由' || state.genre === 'custom' ? '自由创作' : state.genre}
 【主题】${state.theme}
 【画面风格】${styleConfig.label}
 
@@ -1421,15 +1428,17 @@ function extractPrompt(text) {
 }
 
 function generateImage(prompt, sceneText) {
-  // 每个场景用唯一 seed（时间戳 + 随机数 + 场景计数器）
+  // 每个场景用唯一 seed
   const seed = Date.now() + Math.floor(Math.random() * 99999) + state.sceneCount * 10007;
   const isMobile = window.innerWidth < 768;
   const isRealistic = state.visualStyle === 'realistic';
   const w = isRealistic ? (isMobile ? 768 : 1024) : (isMobile ? 896 : 1280);
   const h = isRealistic ? (isMobile ? 1024 : 576) : (isMobile ? 1152 : 720);
 
-  const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${w}&height=${h}&seed=${seed}&nologo=true&model=flux`;
-  state.imageUrl = url;
+  const directUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${w}&height=${h}&seed=${seed}&nologo=true&model=flux`;
+  // 服务端代理 URL（利用服务器缓存+更快下载）
+  const proxyUrl = `/api/image?url=${encodeURIComponent(directUrl)}`;
+  state.imageUrl = directUrl;
   state.imageLoading = true;
 
   // 场景过渡闪光效果
@@ -1444,22 +1453,30 @@ function generateImage(prompt, sceneText) {
   if (sceneText && SceneAnim.running) {
     SceneAnim.updateForScene(sceneText);
   }
-  // 每个场景重新生成粒子
   spawnParticles();
 
-  // 带超时的图片加载
-  const IMG_TIMEOUT = isRealistic ? 12000 : 18000;
+  // 双通道加载：代理 + 直连并行，谁先到用谁
+  const IMG_TIMEOUT = isRealistic ? 10000 : 15000;
   let settled = false;
 
   const timeoutP = new Promise((_, reject) =>
     setTimeout(() => { if (!settled) { settled = true; reject(new Error('timeout')); } }, IMG_TIMEOUT)
   );
 
-  Promise.race([preloadImage(url), timeoutP])
-    .then(() => {
+  // 并行尝试代理和直连
+  const proxyP = preloadImage(proxyUrl).catch(() => null);
+  const directP = preloadImage(directUrl).catch(() => null);
+
+  Promise.race([
+    Promise.any([proxyP, directP]).then(r => r),
+    timeoutP
+  ])
+    .then((result) => {
       if (settled) return;
       settled = true;
-      applyImage(url);
+      // 优先用代理结果
+      const useUrl = result ? proxyUrl : directUrl;
+      applyImage(useUrl);
     })
     .catch(() => {
       if (settled) { state.imageLoading = false; return; }
