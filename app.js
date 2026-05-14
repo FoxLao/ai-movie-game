@@ -193,6 +193,7 @@ const SceneAnim = {
       '古风': { colors: ['#ffa502','#ff6348','#ff9ff3','#ffeaa7'], count: 30, speed: 0.8, type: 'petal', trail: false },
       '恋爱': { colors: ['#ff6b9d','#c44569','#f8a5c2','#ff9ff3'], count: 35, speed: 0.7, type: 'heart', trail: false },
       '历史': { colors: ['#d4a574','#8b7355','#c9a96e','#e8d5b7'], count: 25, speed: 0.5, type: 'ember', trail: true },
+      '自由': { colors: ['#6c5ce7','#a855f7','#00d4ff','#ff6b9d'], count: 28, speed: 1.2, type: 'float', trail: true },
     };
     // 英文 genre 映射
     const enMap = {'scifi':'科幻','mystery':'悬疑','wuxia':'古风','romance':'恋爱','history':'历史','custom':'自由'};
@@ -1293,7 +1294,7 @@ Scene description...A character says "dialogue"...
   // 中文 prompt
   return `你是"华夏锋彩"互动影游引擎，创作${styleConfig.label}风格的电影级故事。
 
-【类型】${state.genre}
+【类型】${state.genre === '自由' ? '自由创作' : state.genre}
 【主题】${state.theme}
 【画面风格】${styleConfig.label}
 
@@ -1404,7 +1405,18 @@ function extractPrompt(text) {
 
   if (m) return `${m[1].trim()}, ${styleP}${ethnicityHint}${faceHint}`;
   const s = text.match(/【场景名】(.+)/) || text.match(/\[Scene Name\]\s*(.+)/);
-  if (s) return `${s[1].trim()}, ${state.genre} theme, ${styleP}${ethnicityHint}${faceHint}`;
+  if (s) {
+    // 自定义题材用 theme 描述替代无意义的 "自由 theme"
+    const genreLabel = state.genre === '自由' || state.genre === 'custom'
+      ? (state.theme || 'fantasy')
+      : state.genre;
+    return `${s[1].trim()}, ${genreLabel} theme, ${styleP}${ethnicityHint}${faceHint}`;
+  }
+  // 最后兜底：用场景文本前 80 字符生成图片
+  const cleanText = (text || '').replace(/【[^】]*】/g, '').replace(/\[[^\]]*\]/g, '').trim().substring(0, 80);
+  if (cleanText.length > 10) {
+    return `${cleanText}, ${styleP}${ethnicityHint}${faceHint}`;
+  }
   return null;
 }
 
