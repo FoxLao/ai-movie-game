@@ -11,7 +11,7 @@ const STYLES = {
   },
   'realistic': {
     label: 'AI真人',
-    prompt: 'photorealistic, cinematic still frame, professional photography, dramatic lighting, shallow depth of field, film grain, anamorphic lens flare, 35mm, color grading, ultra realistic, 8k, detailed facial features, sharp face focus, natural proportions, correct anatomy',
+    prompt: 'photorealistic, cinematic still, professional photography, dramatic lighting, 8k, ultra realistic, sharp focus, natural proportions',
     particles: { '科幻':{colors:['#00a8ff','#0066ff','#88ccff'],size:2,speed:1,count:15}, '悬疑':{colors:['#ff4444','#ff8800','#ffcc00'],size:1,speed:0.5,count:8}, '古风':{colors:['#ffcc44','#ff8844','#ffaa66'],size:3,speed:0.8,count:12}, '恋爱':{colors:['#ff88aa','#ffaacc','#ff66aa'],size:2,speed:0.8,count:15}, '历史':{colors:['#d4a574','#8b7355','#c9a96e'],size:2,speed:0.8,count:10}, '自由':{colors:['#8888ff','#aa88ff','#88aaff'],size:2,speed:1,count:12} },
   },
 };
@@ -1368,8 +1368,8 @@ function extractPrompt(text) {
   const ethnicityHint = currentLang === 'zh' ? ', East Asian appearance, black hair, dark eyes' : '';
 
   const faceHint = state.visualStyle === 'realistic'
-    ? ', detailed face, natural proportions, symmetrical face, realistic skin texture'
-    : ', well proportioned anime face, clear features, moderate eyes, symmetrical face';
+    ? ', detailed face, realistic skin'
+    : ', anime face, clear features, moderate eyes';
 
   if (m) return `${m[1].trim()}, ${styleP}${ethnicityHint}${faceHint}`;
   const s = text.match(/【场景名】(.+)/) || text.match(/\[Scene Name\]\s*(.+)/);
@@ -1380,8 +1380,10 @@ function extractPrompt(text) {
 function generateImage(prompt, sceneText) {
   const seed = Date.now();
   const isMobile = window.innerWidth < 768;
-  const w = isMobile ? 896 : 1280;
-  const h = isMobile ? 1152 : 720;
+  const isRealistic = state.visualStyle === 'realistic';
+  // 真人模式用较小尺寸加快生成速度
+  const w = isRealistic ? (isMobile ? 768 : 1024) : (isMobile ? 896 : 1280);
+  const h = isRealistic ? (isMobile ? 1024 : 576) : (isMobile ? 1152 : 720);
 
   const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${w}&height=${h}&seed=${seed}&nologo=true&model=flux`;
   state.imageUrl = url;
@@ -1400,8 +1402,8 @@ function generateImage(prompt, sceneText) {
     SceneAnim.updateForScene(sceneText);
   }
 
-  // 带超时的图片加载
-  const IMG_TIMEOUT = 18000;
+  // 带超时的图片加载（真人模式给更短超时+更快重试）
+  const IMG_TIMEOUT = isRealistic ? 12000 : 18000;
   let settled = false;
 
   const timeoutP = new Promise((_, reject) =>
@@ -1415,13 +1417,12 @@ function generateImage(prompt, sceneText) {
       applyImage(url);
     })
     .catch(() => {
+      if (settled) { state.imageLoading = false; return; }
+      settled = true;
       state.imageLoading = false;
-      // 超时/失败时用更小尺寸重试一次
-      if (!settled) {
-        settled = true;
-        const retryUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=768&height=432&seed=${seed}&nologo=true&model=flux`;
-        preloadImage(retryUrl).then(() => applyImage(retryUrl)).catch(() => {});
-      }
+      // 超时/失败时用最小尺寸重试
+      const retryUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=640&height=360&seed=${seed}&nologo=true&model=flux`;
+      preloadImage(retryUrl).then(() => applyImage(retryUrl)).catch(() => {});
     });
 }
 
