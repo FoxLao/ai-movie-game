@@ -659,6 +659,8 @@ const CinemaFX = {
   overlay: null,
   style: '2d-anime',
   timer: null,
+  animTimer: null,
+  frame: 0,
 
   init() {
     this.overlay = document.getElementById('cinema-overlay');
@@ -672,57 +674,86 @@ const CinemaFX = {
     }
   },
 
-  // 场景切换时触发特效
+  // 场景切换时触发特效 — 每个场景生成新的动态效果
   playEffect(sceneText) {
+    this.stop();
     this.init();
     if (!this.overlay) return;
     this.style = state.visualStyle;
+    this.frame = 0;
 
     const lower = (sceneText || '').toLowerCase();
     let effect = 'ambient';
-    if (/打|战|攻|fight|battle|attack/i.test(lower)) effect = 'dramatic';
-    else if (/哭|泪|悲|sad|cry|tear/i.test(lower)) effect = 'sorrow';
+    if (/打|战|攻|fight|battle|attack|剑|刀|武/i.test(lower)) effect = 'dramatic';
+    else if (/哭|泪|悲|sad|cry|tear|哀/i.test(lower)) effect = 'sorrow';
     else if (/笑|乐|欢|happy|laugh|joy/i.test(lower)) effect = 'warm';
     else if (/夜|暗|黑|night|dark|shadow/i.test(lower)) effect = 'noir';
-    else if (/雨|雪|storm|rain|snow/i.test(lower)) effect = 'weather';
-    else if (/爱|情|吻|love|romance|kiss/i.test(lower)) effect = 'romance';
-    else if (/火|焰|燃|fire|flame|burn/i.test(lower)) effect = 'fire';
+    else if (/雨|雪|storm|rain|snow|雷/i.test(lower)) effect = 'weather';
+    else if (/爱|情|吻|love|romance|kiss|拥/i.test(lower)) effect = 'romance';
+    else if (/火|焰|燃|fire|flame|burn|爆/i.test(lower)) effect = 'fire';
+    else if (/海|河|湖|水|ocean|river|lake|water/i.test(lower)) effect = 'water';
+    else if (/森|林|树|forest|tree|花|草/i.test(lower)) effect = 'nature';
 
-    // 真人模式更强烈的电影特效
     const isRealistic = this.style === 'realistic';
-    const styles = {
-      ambient: isRealistic
-        ? 'background:radial-gradient(ellipse at 50% 50%,rgba(255,255,255,0.03) 0%,transparent 70%);animation:cineBreath 4s ease-in-out infinite'
-        : 'background:radial-gradient(ellipse at 50% 50%,rgba(108,92,231,0.05) 0%,transparent 70%);animation:cineBreath 3s ease-in-out infinite',
-      dramatic: isRealistic
-        ? 'background:linear-gradient(135deg,rgba(255,60,0,0.08),rgba(0,0,0,0.15));animation:cineFlash 0.5s ease-out'
-        : 'background:linear-gradient(135deg,rgba(255,100,50,0.1),rgba(255,0,0,0.05));animation:cinePulse 1s ease-in-out 3',
-      sorrow: isRealistic
-        ? 'background:linear-gradient(180deg,rgba(0,50,100,0.12),rgba(0,0,50,0.1));animation:cineFadeIn 2s ease-out'
-        : 'background:linear-gradient(180deg,rgba(100,100,200,0.1),rgba(50,50,150,0.08));animation:cineFadeIn 1.5s ease-out',
-      warm: isRealistic
-        ? 'background:radial-gradient(ellipse at 50% 30%,rgba(255,200,50,0.08),transparent 60%);animation:cineGlow 3s ease-in-out infinite'
-        : 'background:radial-gradient(ellipse at 50% 30%,rgba(255,220,100,0.12),transparent 60%);animation:cineGlow 2.5s ease-in-out infinite',
-      noir: isRealistic
-        ? 'background:linear-gradient(180deg,rgba(0,0,0,0.2),rgba(0,0,30,0.15));animation:cineFadeIn 3s ease-out'
-        : 'background:linear-gradient(180deg,rgba(30,0,50,0.15),rgba(0,0,0,0.1));animation:cineFadeIn 2s ease-out',
-      weather: isRealistic
-        ? 'background:linear-gradient(180deg,rgba(100,120,140,0.1),rgba(50,50,70,0.08));animation:cineBreath 5s ease-in-out infinite'
-        : 'background:linear-gradient(180deg,rgba(150,150,200,0.08),rgba(80,80,120,0.06));animation:cineBreath 4s ease-in-out infinite',
-      romance: isRealistic
-        ? 'background:radial-gradient(ellipse at 50% 50%,rgba(255,100,120,0.06),rgba(255,200,200,0.03) 60%);animation:cineGlow 4s ease-in-out infinite'
-        : 'background:radial-gradient(ellipse at 50% 50%,rgba(255,100,150,0.1),rgba(255,180,200,0.05) 60%);animation:cineGlow 3s ease-in-out infinite',
-      fire: isRealistic
-        ? 'background:linear-gradient(0deg,rgba(255,80,0,0.08),rgba(255,200,0,0.03));animation:cineFlash 0.3s ease-out, cineBreath 2s ease-in-out infinite'
-        : 'background:linear-gradient(0deg,rgba(255,100,0,0.1),rgba(255,200,50,0.05));animation:cinePulse 1.5s ease-in-out 2',
+
+    // 每个场景基于文本内容生成唯一颜色
+    let hash = 0;
+    for (let i = 0; i < (sceneText || '').length; i++) hash = ((hash << 5) - hash + sceneText.charCodeAt(i)) | 0;
+    const hue = Math.abs(hash % 360);
+
+    // 场景专属动态 CSS
+    const intensity = isRealistic ? 0.6 : 1.0;
+    const styleMap = {
+      ambient: {
+        bg: `radial-gradient(ellipse at ${50+hash%20}% ${40+hash%20}%, hsla(${hue},60%,50%,${0.04*intensity}) 0%, transparent 70%)`,
+        anim: 'cineBreath', dur: `${3+Math.abs(hash%3)}s`
+      },
+      dramatic: {
+        bg: `linear-gradient(${135+hash%90}deg, hsla(${hue},80%,40%,${0.1*intensity}), hsla(${(hue+180)%360},70%,30%,${0.08*intensity}))`,
+        anim: 'cinePulse', dur: `${0.8+Math.abs(hash%3)*0.3}s`
+      },
+      sorrow: {
+        bg: `linear-gradient(180deg, hsla(${200+hash%40},50%,40%,${0.1*intensity}), hsla(${220+hash%30},40%,20%,${0.08*intensity}))`,
+        anim: 'cineFadeIn', dur: `${1.5+Math.abs(hash%2)}s`
+      },
+      warm: {
+        bg: `radial-gradient(ellipse at ${50+hash%15}% ${30+hash%15}%, hsla(${40+hash%20},80%,55%,${0.08*intensity}), transparent 60%)`,
+        anim: 'cineGlow', dur: `${2.5+Math.abs(hash%3)}s`
+      },
+      noir: {
+        bg: `linear-gradient(180deg, hsla(${hue},10%,5%,${0.15*intensity}), hsla(${hue},10%,0%,${0.12*intensity}))`,
+        anim: 'cineFadeIn', dur: `${2+Math.abs(hash%2)}s`
+      },
+      weather: {
+        bg: `linear-gradient(180deg, hsla(${200+hash%30},40%,50%,${0.1*intensity}), hsla(${210+hash%20},30%,30%,${0.08*intensity}))`,
+        anim: 'cineBreath', dur: `${4+Math.abs(hash%3)}s`
+      },
+      romance: {
+        bg: `radial-gradient(ellipse at ${50+hash%20}% ${50+hash%15}%, hsla(${340+hash%30},70%,60%,${0.06*intensity}), hsla(${350+hash%20},60%,70%,${0.03*intensity}) 60%)`,
+        anim: 'cineGlow', dur: `${3+Math.abs(hash%3)}s`
+      },
+      fire: {
+        bg: `linear-gradient(0deg, hsla(${15+hash%20},90%,50%,${0.08*intensity}), hsla(${40+hash%15},90%,60%,${0.03*intensity}))`,
+        anim: 'cinePulse', dur: `${1.2+Math.abs(hash%2)*0.5}s`
+      },
+      water: {
+        bg: `radial-gradient(ellipse at ${40+hash%20}% ${60+hash%20}%, hsla(${190+hash%30},60%,45%,${0.08*intensity}), transparent 70%)`,
+        anim: 'cineBreath', dur: `${4+Math.abs(hash%2)}s`
+      },
+      nature: {
+        bg: `radial-gradient(ellipse at ${50+hash%20}% ${40+hash%20}%, hsla(${100+hash%40},50%,40%,${0.08*intensity}), transparent 65%)`,
+        anim: 'cineGlow', dur: `${3+Math.abs(hash%3)}s`
+      }
     };
 
-    this.overlay.style.cssText = styles[effect] || styles.ambient;
+    const cfg = styleMap[effect] || styleMap.ambient;
+    this.overlay.style.cssText = `background:${cfg.bg};animation:${cfg.anim} ${cfg.dur} ease-in-out infinite`;
     this.overlay.classList.add('active');
   },
 
   stop() {
     if (this.timer) { clearTimeout(this.timer); this.timer = null; }
+    if (this.animTimer) { clearInterval(this.animTimer); this.animTimer = null; }
     if (this.overlay) this.overlay.classList.remove('active');
   }
 };
@@ -1378,10 +1409,10 @@ function extractPrompt(text) {
 }
 
 function generateImage(prompt, sceneText) {
-  const seed = Date.now();
+  // 每个场景用唯一 seed（时间戳 + 随机数 + 场景计数器）
+  const seed = Date.now() + Math.floor(Math.random() * 99999) + state.sceneCount * 10007;
   const isMobile = window.innerWidth < 768;
   const isRealistic = state.visualStyle === 'realistic';
-  // 真人模式用较小尺寸加快生成速度
   const w = isRealistic ? (isMobile ? 768 : 1024) : (isMobile ? 896 : 1280);
   const h = isRealistic ? (isMobile ? 1024 : 576) : (isMobile ? 1152 : 720);
 
@@ -1396,13 +1427,15 @@ function generateImage(prompt, sceneText) {
     setTimeout(() => flash.classList.remove('active'), 150);
   }
 
-  // 立即播放 CinemaFX 和更新动画，不依赖图片加载
+  // 立即播放场景专属特效和动画
   CinemaFX.playEffect(sceneText);
   if (sceneText && SceneAnim.running) {
     SceneAnim.updateForScene(sceneText);
   }
+  // 每个场景重新生成粒子
+  spawnParticles();
 
-  // 带超时的图片加载（真人模式给更短超时+更快重试）
+  // 带超时的图片加载
   const IMG_TIMEOUT = isRealistic ? 12000 : 18000;
   let settled = false;
 
@@ -1421,7 +1454,8 @@ function generateImage(prompt, sceneText) {
       settled = true;
       state.imageLoading = false;
       // 超时/失败时用最小尺寸重试
-      const retryUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=640&height=360&seed=${seed}&nologo=true&model=flux`;
+      const retrySeed = seed + 1;
+      const retryUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=640&height=360&seed=${retrySeed}&nologo=true&model=flux`;
       preloadImage(retryUrl).then(() => applyImage(retryUrl)).catch(() => {});
     });
 }
@@ -1437,7 +1471,9 @@ function applyImage(url) {
 
   const container = document.getElementById('scene-image');
   KB.forEach(c => container.classList.remove(c));
-  container.classList.add(KB[Math.floor(Math.random() * KB.length)]);
+  // 根据场景内容选择镜头效果
+  const kb = KB[Math.floor(Math.random() * KB.length)];
+  container.classList.add(kb);
 
   state.imgLayer = nextLayer;
   state.imageLoading = false;
@@ -1488,8 +1524,6 @@ async function showScene(text, isEnd) {
   storyEl.innerHTML = '';
   choicesEl.innerHTML = '';
   storyEl.scrollTop = 0;
-
-  spawnParticles();
 
   // Bug 1 修复：根据场景文本动态调整 Canvas 动画
   if (SceneAnim.running) SceneAnim.updateForScene(text);
