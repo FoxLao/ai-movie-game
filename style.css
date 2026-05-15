@@ -13,7 +13,6 @@ body{font-family:-apple-system,'PingFang SC','Noto Sans SC','Microsoft YaHei',sa
 @keyframes starDrift{to{transform:translateY(-250px)}}
 
 .start-content{text-align:center;padding:2rem 1.5rem;max-width:500px;width:100%;position:relative;z-index:1}
-
 .logo-wrap{margin-bottom:2rem}
 .logo-icon{display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#6c5ce7,#a855f7);color:#fff;font-size:1.8rem;font-weight:900;margin-bottom:12px;box-shadow:0 8px 32px rgba(108,92,231,0.3)}
 .title-main{font-size:2.6rem;font-weight:900;color:#fff;letter-spacing:6px;line-height:1.2}
@@ -56,13 +55,16 @@ body{font-family:-apple-system,'PingFang SC','Noto Sans SC','Microsoft YaHei',sa
 #game-screen{flex-direction:column;background:#06060c}
 .game-container{width:100%;height:100%;display:flex;flex-direction:column}
 
-.scene-image{flex:0 0 40vh;background:linear-gradient(135deg,#0f0f1e,#1a1040,#0f0f2e);background-size:cover;background-position:center;background-repeat:no-repeat;position:relative;overflow:hidden}
-.img-layer{position:absolute;top:0;left:0;right:0;bottom:0;background-size:cover;background-position:center;background-repeat:no-repeat;opacity:0;transition:opacity 1.2s ease;will-change:transform,opacity;-webkit-backface-visibility:hidden;backface-visibility:hidden;-webkit-transform:translateZ(0);transform:translateZ(0)}
-.img-layer.active-layer{opacity:1}
-.scene-overlay{position:absolute;bottom:0;left:0;right:0;height:100%;background:linear-gradient(transparent 25%,rgba(6,6,12,0.6) 65%,rgba(6,6,12,1) 100%);z-index:2}
-.scene-badge{position:absolute;top:14px;left:14px;background:rgba(108,92,231,0.65);backdrop-filter:blur(8px);color:#fff;font-size:0.68rem;letter-spacing:1.5px;padding:5px 12px;border-radius:16px;z-index:10;font-weight:600;max-width:75%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.scene-image{flex:0 0 40vh;background:linear-gradient(135deg,#0f0f1e,#1a1040,#0f0f2e);position:relative;overflow:hidden}
 
-/* 真人模式扫描线 */
+/* Image layers — KB animations use transform only, background-size stays cover */
+.img-layer{position:absolute;top:0;left:0;right:0;bottom:0;background-size:cover;background-position:center;background-repeat:no-repeat;opacity:0;transition:opacity 1s ease;will-change:transform,opacity;transform:translateZ(0);backface-visibility:hidden}
+.img-layer.active-layer{opacity:1}
+
+.scene-overlay{position:absolute;bottom:0;left:0;right:0;height:100%;background:linear-gradient(transparent 25%,rgba(6,6,12,0.6) 65%,rgba(6,6,12,1) 100%);z-index:2;pointer-events:none}
+.scene-badge{position:absolute;top:14px;left:14px;background:rgba(108,92,231,0.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;font-size:0.68rem;letter-spacing:1.5px;padding:5px 12px;border-radius:16px;z-index:10;font-weight:600;max-width:75%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Scanlines (realistic mode) */
 .scanlines{position:absolute;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px);z-index:7;pointer-events:none;animation:scanMove 8s linear infinite}
 .scanlines.hidden{display:none}
 @keyframes scanMove{0%{background-position:0 0}100%{background-position:0 100px}}
@@ -90,7 +92,7 @@ body{font-family:-apple-system,'PingFang SC','Noto Sans SC','Microsoft YaHei',sa
 .restart-btn:hover{color:#666;border-color:#444}
 
 /* ===== Loading ===== */
-.loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(6,6,12,0.9);display:flex;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(4px)}
+.loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(6,6,12,0.9);display:flex;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 .loading-overlay.hidden{display:none}
 .loading-wrap{text-align:center}
 .loading-spinner{width:32px;height:32px;border:3px solid rgba(108,92,231,0.12);border-top-color:#6c5ce7;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 14px}
@@ -118,7 +120,7 @@ body{font-family:-apple-system,'PingFang SC','Noto Sans SC','Microsoft YaHei',sa
 .btn-secondary{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#999;padding:13px 28px;border-radius:22px;font-size:0.9rem;cursor:pointer;transition:all 0.3s}
 .btn-secondary:hover{color:#ccc;border-color:rgba(255,255,255,0.25)}
 
-/* ===== Ken Burns ===== */
+/* ===== Ken Burns — transform-based (no background-size conflict) ===== */
 .kb-zoom-in{animation:kbZI 8s ease-in-out infinite alternate}
 .kb-zoom-out{animation:kbZO 8s ease-in-out infinite alternate}
 .kb-pan-left{animation:kbPL 10s ease-in-out infinite alternate}
@@ -127,14 +129,15 @@ body{font-family:-apple-system,'PingFang SC','Noto Sans SC','Microsoft YaHei',sa
 .kb-rotate{animation:kbR 12s ease-in-out infinite alternate}
 .kb-dramatic{animation:kbD 6s ease-in-out infinite alternate}
 .kb-slow-zoom{animation:kbS 15s ease-in-out infinite alternate}
-@keyframes kbZI{0%{background-size:100%}100%{background-size:145%}}
-@keyframes kbZO{0%{background-size:145%}100%{background-size:100%}}
-@keyframes kbPL{0%{background-position:100% 50%;background-size:140%}100%{background-position:0% 50%;background-size:140%}}
-@keyframes kbPR{0%{background-position:0% 50%;background-size:140%}100%{background-position:100% 50%;background-size:140%}}
-@keyframes kbPU{0%{background-position:50% 100%;background-size:135%}100%{background-position:50% 0%;background-size:135%}}
-@keyframes kbR{0%{transform:scale(1) rotate(0deg);background-size:120%}100%{transform:scale(1.1) rotate(1.5deg);background-size:140%}}
-@keyframes kbD{0%{background-size:100%;background-position:50% 30%}50%{background-size:160%;background-position:50% 50%}100%{background-size:120%;background-position:50% 70%}}
-@keyframes kbS{0%{background-size:100%}100%{background-size:130%}}
+
+@keyframes kbZI{0%{transform:translateZ(0) scale(1)}100%{transform:translateZ(0) scale(1.35)}}
+@keyframes kbZO{0%{transform:translateZ(0) scale(1.35)}100%{transform:translateZ(0) scale(1)}}
+@keyframes kbPL{0%{transform:translateZ(0) translateX(5%) scale(1.15)}100%{transform:translateZ(0) translateX(-5%) scale(1.15)}}
+@keyframes kbPR{0%{transform:translateZ(0) translateX(-5%) scale(1.15)}100%{transform:translateZ(0) translateX(5%) scale(1.15)}}
+@keyframes kbPU{0%{transform:translateZ(0) translateY(5%) scale(1.15)}100%{transform:translateZ(0) translateY(-5%) scale(1.15)}}
+@keyframes kbR{0%{transform:translateZ(0) scale(1) rotate(0deg)}100%{transform:translateZ(0) scale(1.12) rotate(2deg)}}
+@keyframes kbD{0%{transform:translateZ(0) scale(1)}50%{transform:translateZ(0) scale(1.4)}100%{transform:translateZ(0) scale(1.2)}}
+@keyframes kbS{0%{transform:translateZ(0) scale(1)}100%{transform:translateZ(0) scale(1.2)}}
 
 /* ===== Particles ===== */
 .particles{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:3}
