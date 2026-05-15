@@ -1,6 +1,6 @@
 /**
- * 华夏锋彩 1.8 - 后端服务（Railway 兼容版）
- * 含图片代理 + LRU缓存
+ * 华夏锋彩 1.8 - 后端服务
+ * 图片代理 + LRU缓存 + 失败重试
  */
 
 const http = require('http');
@@ -23,16 +23,15 @@ const MIME_TYPES = {
   '.svg': 'image/svg+xml',
 };
 
-// ===== LRU Image Cache (in-memory, max 200 entries) =====
+// ===== LRU Cache =====
 const imgCache = new Map();
-const MAX_CACHE = 200;
-const CACHE_TTL = 24 * 60 * 60 * 1000; // 24h
+const MAX_CACHE = 150;
+const CACHE_TTL = 12 * 60 * 60 * 1000; // 12h
 
 function getCached(key) {
   const e = imgCache.get(key);
   if (!e) return null;
   if (Date.now() - e.ts > CACHE_TTL) { imgCache.delete(key); return null; }
-  // Move to end (LRU refresh)
   imgCache.delete(key);
   imgCache.set(key, e);
   return e;
@@ -40,7 +39,6 @@ function getCached(key) {
 
 function setCache(key, buf, ct) {
   if (imgCache.size >= MAX_CACHE) {
-    // Delete oldest entry
     const first = imgCache.keys().next().value;
     imgCache.delete(first);
   }
@@ -51,21 +49,12 @@ function serveStatic(req, res) {
   let filePath = req.url === '/' ? '/index.html' : req.url;
   filePath = filePath.split('?')[0];
   filePath = path.join(__dirname, filePath);
-
-  if (!filePath.startsWith(__dirname)) {
-    res.writeHead(403);
-    return res.end('Forbidden');
-  }
+  if (!filePath.startsWith(__dirname)) { res.writeHead(403); return res.end('Forbidden'); }
 
   const ext = path.extname(filePath);
   const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-
   fs.readFile(filePath, (err, data) => {
-    if (err) {
-      res.writeHead(404);
-      res.end('Not Found');
-      return;
-    }
+    if (err) { res.writeHead(404); return res.end('Not Found'); }
     res.writeHead(200, {
       'Content-Type': contentType,
       'Cache-Control': 'public, max-age=3600',
@@ -76,40 +65,47 @@ function serveStatic(req, res) {
 
 async function callLLM(messages) {
   if (!API_KEY) throw new Error('未配置 API_KEY');
-
   const url = `${API_BASE}/chat/completions`;
   const body = { model: MODEL, messages, temperature: 0.85, max_tokens: 800, top_p: 0.9 };
-
   const response = await fetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${API_KEY}`,
-    },
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` },
     body: JSON.stringify(body),
   });
-
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error(`API ${response.status}: ${errorText}`);
   }
-
   const data = await response.json();
   return data.choices[0].message.content;
 }
 
-// ===== Image Proxy =====
+// ===== Image Proxy with retry =====
+async function fetchWithRetry(url, retries = 2) {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      const r = await fetch(url, {
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+        signal: AbortSignal.timeout(30000 + i * 15000), // 30s → 45s → 60s
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r;
+    } catch (e) {
+      if (i === retries) throw e;
+      console.log(`[Image Proxy] Retry ${i+1}/${retries} for ${url.slice(0,80)}...`);
+      await new Promise(r => setTimeout(r, 2000 * (i + 1)));
+    }
+  }
+}
+
 async function proxyImage(req, res) {
-  // URL: /api/image?url=encodeURIComponent(pollinationsUrl)
   const u = new URL(req.url, 'http://localhost');
   const targetUrl = u.searchParams.get('url');
-
   if (!targetUrl) {
     res.writeHead(400, { 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({ error: 'missing url param' }));
+    return res.end(JSON.stringify({ error: 'missing url' }));
   }
 
-  // Cache key from URL
   const cacheKey = crypto.createHash('md5').update(targetUrl).digest('hex');
   const cached = getCached(cacheKey);
   if (cached) {
@@ -122,18 +118,10 @@ async function proxyImage(req, res) {
   }
 
   try {
-    const r = await fetch(targetUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0' },
-      signal: AbortSignal.timeout(45000), // 45s timeout
-    });
-
-    if (!r.ok) throw new Error(`Image fetch ${r.status}`);
-
+    const r = await fetchWithRetry(targetUrl, 2);
     const ct = r.headers.get('content-type') || 'image/jpeg';
     const buf = Buffer.from(await r.arrayBuffer());
-
     setCache(cacheKey, buf, ct);
-
     res.writeHead(200, {
       'Content-Type': ct,
       'Cache-Control': 'public, max-age=86400',
@@ -142,32 +130,34 @@ async function proxyImage(req, res) {
     res.end(buf);
   } catch (err) {
     console.error('[Image Proxy Error]', err.message);
-    res.writeHead(502, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'image fetch failed' }));
+    // 返回 1x1 透明 PNG 作为降级，避免前端 img.onerror 不触发
+    const PNG1x1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==', 'base64');
+    res.writeHead(200, {
+      'Content-Type': 'image/png',
+      'Cache-Control': 'no-cache',
+      'X-Image-Error': 'true',
+    });
+    res.end(PNG1x1);
   }
 }
 
+// ===== Server =====
 const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method === 'OPTIONS') {
-    res.writeHead(204);
-    return res.end();
-  }
+  if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
 
   if (req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ status: 'ok', model: MODEL, cacheSize: imgCache.size }));
   }
 
-  // Image proxy
   if (req.method === 'GET' && req.url.startsWith('/api/image')) {
     return proxyImage(req, res);
   }
 
-  // Story API
   if (req.method === 'POST' && req.url === '/api/story') {
     try {
       const body = await readBody(req);
