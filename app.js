@@ -2,17 +2,32 @@
 
 const API_URL = '/api/story';
 
-// 画面风格配置
 const STYLES = {
-  '3d-anime': {
-    label: '3D动漫',
-    prompt: '3D anime style, cel shading, Studio Ghibli, Pixar quality, volumetric lighting, cinematic composition, rich colors, ultra detailed, 8k render',
-    particles: { '科幻':{colors:['#00d4ff','#6c5ce7','#a855f7'],size:3,speed:2,count:25}, '悬疑':{colors:['#ff6b6b','#ffa502','#ddd'],size:2,speed:1,count:12}, '古风':{colors:['#ffa502','#ff6348','#ff9ff3'],size:4,speed:1.2,count:18}, '恋爱':{colors:['#ff6b9d','#c44569','#f8a5c2'],size:5,speed:1,count:22}, '恐怖':{colors:['#2ed573','#a4b0be','#747d8c'],size:2,speed:0.6,count:10}, '自由':{colors:['#6c5ce7','#a855f7','#00d4ff'],size:3,speed:1.5,count:20} },
+  '2d-anime': {
+    label: '2D动漫',
+    prompt: '2d anime illustration, cel shading, vibrant colors, detailed background, expressive characters, studio ghibli inspired, cinematic composition, masterpiece',
+    model: 'flux',
+    particles: {
+      '科幻':{colors:['#00d4ff','#6c5ce7','#a855f7'],size:3,speed:2,count:20},
+      '悬疑':{colors:['#ff6b6b','#ffa502','#ddd'],size:2,speed:1,count:10},
+      '古风':{colors:['#ffa502','#ff6348','#ff9ff3'],size:4,speed:1.2,count:15},
+      '恋爱':{colors:['#ff6b9d','#c44569','#f8a5c2'],size:5,speed:1,count:18},
+      '恐怖':{colors:['#2ed573','#a4b0be','#747d8c'],size:2,speed:0.6,count:8},
+      '自由':{colors:['#6c5ce7','#a855f7','#00d4ff'],size:3,speed:1.5,count:16},
+    },
   },
   'realistic': {
     label: 'AI真人',
     prompt: 'photorealistic, cinematic still frame, single person portrait, perfect symmetrical face, clear detailed eyes, natural facial features, professional photography, dramatic lighting, shallow depth of field, film grain, anamorphic lens flare, 35mm, color grading, 8k, masterpiece, best quality, sharp focus on face, correct facial anatomy, normal hands, natural skin texture',
-    particles: { '科幻':{colors:['#00a8ff','#0066ff','#88ccff'],size:2,speed:1,count:15}, '悬疑':{colors:['#ff4444','#ff8800','#ffcc00'],size:1,speed:0.5,count:8}, '古风':{colors:['#ffcc44','#ff8844','#ffaa66'],size:3,speed:0.8,count:12}, '恋爱':{colors:['#ff88aa','#ffaacc','#ff66aa'],size:2,speed:0.8,count:15}, '恐怖':{colors:['#44ff66','#888888','#66aa66'],size:1,speed:0.3,count:6}, '自由':{colors:['#8888ff','#aa88ff','#88aaff'],size:2,speed:1,count:12} },
+    model: 'flux-realism',
+    particles: {
+      '科幻':{colors:['#00a8ff','#0066ff','#88ccff'],size:2,speed:1,count:12},
+      '悬疑':{colors:['#ff4444','#ff8800','#ffcc00'],size:1,speed:0.5,count:6},
+      '古风':{colors:['#ffcc44','#ff8844','#ffaa66'],size:3,speed:0.8,count:10},
+      '恋爱':{colors:['#ff88aa','#ffaacc','#ff66aa'],size:2,speed:0.8,count:12},
+      '恐怖':{colors:['#44ff66','#888888','#66aa66'],size:1,speed:0.3,count:5},
+      '自由':{colors:['#8888ff','#aa88ff','#88aaff'],size:2,speed:1,count:10},
+    },
   },
 };
 
@@ -21,15 +36,14 @@ const KB = ['kb-zoom-in','kb-zoom-out','kb-pan-left','kb-pan-right','kb-pan-up',
 // ===== State =====
 let state = {
   genre:'', theme:'', chapter:1, choiceCount:0, history:[],
-  sceneCount:0, isTyping:false, imageUrl:null, visualStyle:'3d-anime',
-  imageLoading:false, abortTyping:false, activeLayer: 0,
+  sceneCount:0, isTyping:false, imageUrl:null, visualStyle:'2d-anime',
+  imageLoading:false, abortTyping:false, activeLayer:0,
 };
 
-// ===== Init =====
 let selectedGenre = null;
 let genreDesc = '';
 
-// 画面风格选择
+// ===== Init =====
 document.querySelectorAll('.style-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('selected'));
@@ -38,7 +52,6 @@ document.querySelectorAll('.style-btn').forEach(btn => {
   });
 });
 
-// 题材选择
 document.querySelectorAll('.genre-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('selected'));
@@ -75,18 +88,15 @@ document.getElementById('replay-btn').addEventListener('click', resetGame);
 function startGame() {
   document.getElementById('start-screen').classList.remove('active');
   document.getElementById('game-screen').classList.add('active');
-
-  // 真人模式：显示扫描线
   document.getElementById('scanlines').classList.toggle('hidden', state.visualStyle !== 'realistic');
-
   updateStatus();
 
-  const styleConfig = STYLES[state.visualStyle];
-  const sys = `你是"华夏锋彩"互动影游引擎，创作${styleConfig.label}风格的电影级故事。
+  const sc = STYLES[state.visualStyle];
+  const sys = `你是"华夏锋彩"互动影游引擎，创作${sc.label}风格的电影级故事。
 
 【类型】${state.genre}
 【主题】${state.theme}
-【画面风格】${styleConfig.label}
+【画面风格】${sc.label}
 
 【核心规则】
 1. 第二人称"你"叙述，电影镜头般描写
@@ -96,11 +106,11 @@ function startGame() {
 5. 根据所有历史选择影响剧情
 6. 场景要有画面感：环境、声音、光影、氛围
 7. 开头用 【场景名】标注
-8. 场景名后用 【画面】用英文描述画面（适合${styleConfig.label}风格渲染）
+8. 场景名后用 【画面】用英文描述画面（适合${sc.label}风格渲染）
 
 【输出格式】
 【场景名】标题
-【画面】英文描述，${state.visualStyle === 'realistic' ? 'IMPORTANT: describe ONLY ONE person in frame, medium shot or wide shot, avoid close-up of multiple faces. Include: single person, correct face, natural expression. Describe: 真实人物、电影布光、摄影机角度、景深效果、肤色质感' : '3D动漫角色、赛璐珞渲染、夸张表情、梦幻光影'}
+【画面】英文描述，${state.visualStyle === 'realistic' ? 'IMPORTANT: describe ONLY ONE person in frame, medium shot or wide shot, avoid close-up of multiple faces. single person, correct face, natural expression' : '2D anime style illustration, colorful, dynamic composition, expressive characters'}
 
 场景描写...
 
@@ -126,7 +136,6 @@ async function requestScene(userChoice) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ messages: state.history.slice(-12) }),
     });
-
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     if (data.error) throw new Error(data.error);
@@ -134,17 +143,15 @@ async function requestScene(userChoice) {
     const text = data.content;
     state.history.push({ role: 'assistant', content: text });
     state.sceneCount++;
-    state.abortTypine = false;
+    state.abortTyping = false;
 
     hideLoading();
 
-    // 异步生成图片
     const imgP = extractPrompt(text);
     if (imgP) generateImage(imgP);
 
     const isEnd = text.includes('【THE END】') || /【结局[：:]/.test(text);
     await showScene(text, isEnd);
-
   } catch (err) {
     hideLoading();
     state.history.pop();
@@ -157,7 +164,6 @@ function extractPrompt(text) {
   const m = text.match(/【画面】(.+)/);
   const styleP = STYLES[state.visualStyle].prompt;
   let extra = '';
-  // 真人模式：强制单人、避免面部崩坏
   if (state.visualStyle === 'realistic') {
     extra = ', one person only, medium shot, symmetrical face, looking at camera, centered composition';
   }
@@ -168,17 +174,23 @@ function extractPrompt(text) {
 }
 
 function generateImage(prompt) {
+  const styleCfg = STYLES[state.visualStyle];
+  const model = styleCfg.model;
   const seed = Date.now();
-  // 降低分辨率：移动端 640x854，桌面端 1024x576
   const isMobile = window.innerWidth < 768;
-  const w = isMobile ? 640 : 1024;
-  const h = isMobile ? 854 : 576;
+  // 动漫：竖屏场景 576x832（快）；真人：横屏 768x432
+  let w, h;
+  if (state.visualStyle === '2d-anime') {
+    w = isMobile ? 512 : 768;
+    h = isMobile ? 768 : 1024;
+  } else {
+    w = isMobile ? 640 : 768;
+    h = isMobile ? 854 : 432;
+  }
 
-  const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${w}&height=${h}&seed=${seed}&nologo=true&model=flux-realism&enhance=true`;
+  const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${w}&height=${h}&seed=${seed}&nologo=true&model=${model}`;
 
-  // 通过服务器代理加载
   const proxyUrl = `/api/image?url=${encodeURIComponent(pollinationsUrl)}`;
-
   state.imageUrl = proxyUrl;
   state.imageLoading = true;
 
@@ -188,24 +200,34 @@ function generateImage(prompt) {
   ];
   const nextLayer = state.activeLayer === 0 ? 1 : 0;
 
-  // 预加载到非活跃层
   const img = new Image();
   img.onload = () => {
     const el = layers[nextLayer];
-    // 移除旧动画
     KB.forEach(c => el.classList.remove(c));
     el.style.backgroundImage = `url(${proxyUrl})`;
-    el.classList.add(KB[Math.floor(Math.random() * KB.length)]);
-
-    // 交叉淡入
-    layers[state.activeLayer].style.opacity = '0';
-    el.style.opacity = '1';
-    state.activeLayer = nextLayer;
-    state.imageLoading = false;
+    // 先设好 KB 动画（包含 background-size），然后淡入
+    requestAnimationFrame(() => {
+      el.classList.add(KB[Math.floor(Math.random() * KB.length)]);
+      layers[state.activeLayer].style.opacity = '0';
+      el.style.opacity = '1';
+      state.activeLayer = nextLayer;
+      state.imageLoading = false;
+    });
   };
   img.onerror = () => {
-    // 图片加载失败 — 显示场景名作为背景提示
     console.warn('Image load failed, using gradient fallback');
+    // 加载失败：在当前活跃层显示场景氛围渐变
+    const el = layers[state.activeLayer];
+    const genreColors = {
+      '科幻': 'linear-gradient(135deg,#0a0a2e,#1a0a4e,#0a1a3e)',
+      '悬疑': 'linear-gradient(135deg,#1a0a0a,#2e0a1a,#0a0a1a)',
+      '古风': 'linear-gradient(135deg,#1a1000,#2e1a0a,#1a0a0a)',
+      '恋爱': 'linear-gradient(135deg,#1a0a1e,#2e0a2e,#1a0a1a)',
+      '恐怖': 'linear-gradient(135deg,#0a1a0a,#0a0a0a,#0a1a0a)',
+      '自由': 'linear-gradient(135deg,#0a0a2e,#1a0a3e,#0a1a2e)',
+    };
+    el.style.backgroundImage = genreColors[state.genre] || genreColors['自由'];
+    KB.forEach(c => el.classList.remove(c));
     state.imageLoading = false;
   };
   img.src = proxyUrl;
@@ -217,7 +239,6 @@ function spawnParticles() {
   box.innerHTML = '';
   const cfgs = STYLES[state.visualStyle].particles;
   const cfg = cfgs[state.genre] || cfgs['自由'];
-
   for (let i = 0; i < cfg.count; i++) {
     const p = document.createElement('div');
     p.className = 'particle';
@@ -230,7 +251,7 @@ function spawnParticles() {
 // ===== Scene =====
 async function showScene(text, isEnd) {
   state.isTyping = true;
-  state.abortTypine = false;
+  state.abortTyping = false;
 
   const sceneName = (text.match(/【场景名】(.+)/) || [,''])[1].trim() || `场景 ${state.sceneCount}`;
   const { narrative, choices } = parse(text);
@@ -246,27 +267,32 @@ async function showScene(text, isEnd) {
 
   spawnParticles();
 
-  // Typewriter
-  for (let i = 0; i < narrative.length; i++) {
-    if (state.abortTypine) break;
+  // Typewriter — batch innerHTML updates for performance
+  const LEN = narrative.length;
+  let lastHtml = '';
+  for (let i = 0; i < LEN; i++) {
+    if (state.abortTyping) break;
 
-    storyEl.innerHTML = esc(narrative.substring(0, i + 1)) + '<span class="cursor"></span>';
-    storyEl.scrollTop = storyEl.scrollHeight;
+    const newHtml = esc(narrative.substring(0, i + 1));
+    if (i === LEN - 1 || i % 3 === 0) {
+      storyEl.innerHTML = newHtml + (i < LEN - 1 ? '<span class="cursor"></span>' : '');
+      lastHtml = newHtml;
+      storyEl.scrollTop = storyEl.scrollHeight;
+    }
 
     const ch = narrative[i];
-    if ('。！？…'.includes(ch)) await sleep(150);
-    else if ('，、；：\n'.includes(ch)) await sleep(60);
-    else await sleep(20);
+    if ('。！？…'.includes(ch)) await sleep(120);
+    else if ('，、；：\n'.includes(ch)) await sleep(50);
+    else await sleep(18);
   }
 
-  if (!state.abortTypine) {
+  if (!state.abortTyping) {
     storyEl.innerHTML = esc(narrative);
   }
 
-  if (isEnd && !state.abortTypine) { showEnding(narrative, text); return; }
+  if (isEnd && !state.abortTyping) { showEnding(narrative, text); return; }
 
-  // Choices
-  if (!state.abortTypine) {
+  if (!state.abortTyping) {
     for (let i = 0; i < choices.length; i++) {
       const btn = document.createElement('button');
       btn.className = 'choice-btn';
@@ -274,7 +300,7 @@ async function showScene(text, isEnd) {
       btn.style.cssText = 'opacity:0;transform:translateY(8px);';
       btn.addEventListener('click', () => choose(choices[i]));
       choicesEl.appendChild(btn);
-      await sleep(100);
+      await sleep(80);
       btn.style.transition = 'all 0.3s cubic-bezier(0.4,0,0.2,1)';
       btn.style.opacity = '1';
       btn.style.transform = 'translateY(0)';
@@ -306,7 +332,7 @@ function choose(c) {
   state.choiceCount++;
   state.chapter = Math.floor(state.choiceCount / 3) + 1;
   state.isTyping = false;
-  state.abortTypine = true;
+  state.abortTyping = true;
   updateStatus();
   document.getElementById('choices').innerHTML = '';
   requestScene(`我选择 ${c.key}：${c.text}`);
@@ -320,7 +346,6 @@ function updateStatus() {
 // ===== Ending =====
 function showEnding(narrative, fullText) {
   state.isTyping = false;
-
   let type = '普通结局', color = '#ffa502';
   if (/好/.test(fullText)) { type = '✨ 好结局'; color = '#2ed573'; }
   else if (/坏/.test(fullText)) { type = '💀 坏结局'; color = '#ff6b6b'; }
@@ -343,7 +368,11 @@ function showEnding(narrative, fullText) {
 
 // ===== Reset =====
 function resetGame() {
-  state = { genre:'',theme:'',chapter:1,choiceCount:0,history:[],sceneCount:0,isTyping:false,imageUrl:null,visualStyle:state.visualStyle,imageLoading:false,abortTypine:false,activeLayer:0 };
+  state = {
+    genre:'', theme:'', chapter:1, choiceCount:0, history:[],
+    sceneCount:0, isTyping:false, imageUrl:null, visualStyle:state.visualStyle,
+    imageLoading:false, abortTyping:false, activeLayer:0,
+  };
 
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('start-screen').classList.add('active');
@@ -352,13 +381,14 @@ function resetGame() {
   document.getElementById('start-btn').disabled = true;
   document.getElementById('theme-input').value = '';
 
-  // Reset image layers
-  document.querySelectorAll('.img-layer').forEach(el => {
-    KB.forEach(c => el.classList.remove(c));
-    el.style.backgroundImage = '';
-    el.style.opacity = '0';
-  });
-  document.getElementById('img-layer-0').style.opacity = '1';
+  // Reset image layers — layer 0 active, layer 1 hidden
+  const l0 = document.getElementById('img-layer-0');
+  const l1 = document.getElementById('img-layer-1');
+  KB.forEach(c => { l0.classList.remove(c); l1.classList.remove(c); });
+  l0.style.backgroundImage = '';
+  l1.style.backgroundImage = '';
+  l0.style.opacity = '1';
+  l1.style.opacity = '0';
   document.getElementById('particles').innerHTML = '';
   document.getElementById('scanlines').classList.add('hidden');
 }
@@ -375,8 +405,8 @@ function shareResult() {
 
 // ===== Helpers =====
 function showLoading() {
-  const styleName = STYLES[state.visualStyle].label;
-  document.getElementById('loading-text').textContent = `🎬 ${styleName}画面生成中...`;
+  const label = STYLES[state.visualStyle].label;
+  document.getElementById('loading-text').textContent = `🎬 ${label}画面生成中...`;
   document.getElementById('loading-overlay').classList.remove('hidden');
 }
 function hideLoading() {
