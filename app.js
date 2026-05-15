@@ -11,7 +11,7 @@ const STYLES = {
   },
   'realistic': {
     label: 'AI真人',
-    prompt: 'photorealistic, cinematic still frame, professional photography, dramatic lighting, shallow depth of field, film grain, anamorphic lens flare, 35mm, color grading, ultra realistic, 8k, highly detailed face and skin texture',
+    prompt: 'photorealistic, cinematic still frame, single person portrait, perfect symmetrical face, clear detailed eyes, natural facial features, professional photography, dramatic lighting, shallow depth of field, film grain, anamorphic lens flare, 35mm, color grading, 8k, masterpiece, best quality, sharp focus on face, correct facial anatomy, normal hands, natural skin texture',
     particles: { '科幻':{colors:['#00a8ff','#0066ff','#88ccff'],size:2,speed:1,count:15}, '悬疑':{colors:['#ff4444','#ff8800','#ffcc00'],size:1,speed:0.5,count:8}, '古风':{colors:['#ffcc44','#ff8844','#ffaa66'],size:3,speed:0.8,count:12}, '恋爱':{colors:['#ff88aa','#ffaacc','#ff66aa'],size:2,speed:0.8,count:15}, '恐怖':{colors:['#44ff66','#888888','#66aa66'],size:1,speed:0.3,count:6}, '自由':{colors:['#8888ff','#aa88ff','#88aaff'],size:2,speed:1,count:12} },
   },
 };
@@ -100,7 +100,7 @@ function startGame() {
 
 【输出格式】
 【场景名】标题
-【画面】英文描述，${state.visualStyle === 'realistic' ? '真实人物、电影布光、摄影机角度、景深效果、肤色质感' : '3D动漫角色、赛璐珞渲染、夸张表情、梦幻光影'}
+【画面】英文描述，${state.visualStyle === 'realistic' ? 'IMPORTANT: describe ONLY ONE person in frame, medium shot or wide shot, avoid close-up of multiple faces. Include: single person, correct face, natural expression. Describe: 真实人物、电影布光、摄影机角度、景深效果、肤色质感' : '3D动漫角色、赛璐珞渲染、夸张表情、梦幻光影'}
 
 场景描写...
 
@@ -156,9 +156,14 @@ async function requestScene(userChoice) {
 function extractPrompt(text) {
   const m = text.match(/【画面】(.+)/);
   const styleP = STYLES[state.visualStyle].prompt;
-  if (m) return `${m[1].trim()}, ${styleP}`;
+  let extra = '';
+  // 真人模式：强制单人、避免面部崩坏
+  if (state.visualStyle === 'realistic') {
+    extra = ', one person only, medium shot, symmetrical face, looking at camera, centered composition';
+  }
+  if (m) return `${m[1].trim()}, ${styleP}${extra}`;
   const s = text.match(/【场景名】(.+)/);
-  if (s) return `${s[1].trim()}, ${state.genre} theme, ${styleP}`;
+  if (s) return `${s[1].trim()}, ${state.genre} theme, ${styleP}${extra}`;
   return null;
 }
 
@@ -169,7 +174,7 @@ function generateImage(prompt) {
   const w = isMobile ? 640 : 1024;
   const h = isMobile ? 854 : 576;
 
-  const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${w}&height=${h}&seed=${seed}&nologo=true&model=flux`;
+  const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${w}&height=${h}&seed=${seed}&nologo=true&model=flux-realism&enhance=true`;
 
   // 通过服务器代理加载
   const proxyUrl = `/api/image?url=${encodeURIComponent(pollinationsUrl)}`;
