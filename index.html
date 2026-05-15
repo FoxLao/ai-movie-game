@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>华夏锋彩1.0 - AI互动影游</title>
-<link rel="stylesheet" href="style.css">
+<title>华夏锋彩1.8 - AI互动影游</title>
+<link rel="stylesheet" href="style.css?v=1.8">
 </head>
 <body>
 
@@ -14,7 +14,7 @@
     <div class="logo-wrap">
       <div class="logo-icon">华</div>
       <h1 class="title-main">华夏锋彩</h1>
-      <p class="title-ver">1.0</p>
+      <p class="title-ver">1.8</p>
       <p class="title-sub">AI 互动影游 · INTERACTIVE CINEMA</p>
     </div>
 
@@ -57,6 +57,9 @@
 <div id="game-screen" class="screen">
   <div class="game-container">
     <div id="scene-image" class="scene-image">
+      <!-- 双层图片（预加载交叉淡入） -->
+      <div id="img-layer-0" class="img-layer active-layer"></div>
+      <div id="img-layer-1" class="img-layer"></div>
       <div class="scene-overlay"></div>
       <div id="particles" class="particles"></div>
       <div class="lens-flare"></div>
@@ -77,7 +80,7 @@
     </div>
 
     <div class="status-bar">
-      <span class="brand-mark">华夏锋彩</span>
+      <span class="brand-mark">华夏锋彩 1.8</span>
       <span id="chapter-info">第1章</span>
       <button id="restart-btn" class="restart-btn">⟳</button>
     </div>
@@ -112,6 +115,6 @@
   </div>
 </div>
 
-<script src="app.js"></script>
+<script src="app.js?v=1.8"></script>
 </body>
 </html>
