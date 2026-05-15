@@ -18,12 +18,11 @@
       <p class="title-sub">AI 互动影游 · INTERACTIVE CINEMA</p>
     </div>
 
-    <!-- 画面风格 -->
     <div class="section-label">画面风格</div>
     <div class="style-select">
-      <button class="style-btn selected" data-style="3d-anime">
+      <button class="style-btn selected" data-style="2d-anime">
         <span class="style-icon">🎭</span>
-        <span class="style-name">3D动漫</span>
+        <span class="style-name">2D动漫</span>
         <span class="style-desc">吉卜力/Pixar风</span>
       </button>
       <button class="style-btn" data-style="realistic">
@@ -33,7 +32,6 @@
       </button>
     </div>
 
-    <!-- 题材 -->
     <div class="section-label">选择题材</div>
     <div class="genre-select">
       <button class="genre-btn" data-genre="科幻" data-desc="星际航行、AI觉醒、末日求生">🚀<span>科幻</span></button>
@@ -57,7 +55,6 @@
 <div id="game-screen" class="screen">
   <div class="game-container">
     <div id="scene-image" class="scene-image">
-      <!-- 双层图片（预加载交叉淡入） -->
       <div id="img-layer-0" class="img-layer active-layer"></div>
       <div id="img-layer-1" class="img-layer"></div>
       <div class="scene-overlay"></div>
@@ -66,7 +63,6 @@
       <div class="vignette"></div>
       <div class="film-grain"></div>
       <div id="scene-badge" class="scene-badge"></div>
-      <!-- 扫描线（真人模式） -->
       <div id="scanlines" class="scanlines hidden"></div>
     </div>
 
