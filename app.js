@@ -5,7 +5,7 @@ const API_URL = '/api/story';
 const STYLES = {
   '2d-anime': {
     label: '2D动漫',
-    prompt: '2d anime illustration, cel shading, vibrant colors, detailed background, expressive characters, studio ghibli inspired, cinematic composition, masterpiece',
+    prompt: '2d anime illustration, cel shading, vibrant colors, detailed background, studio ghibli inspired, cinematic composition, masterpiece, beautiful detailed face, symmetrical eyes, correct facial features, clean lineart, single character portrait'
     model: 'flux',
     particles: {
       '科幻':{colors:['#00d4ff','#6c5ce7','#a855f7'],size:3,speed:2,count:20},
@@ -110,7 +110,7 @@ function startGame() {
 
 【输出格式】
 【场景名】标题
-【画面】英文描述，${state.visualStyle === 'realistic' ? 'IMPORTANT: describe ONLY ONE person in frame, medium shot or wide shot, avoid close-up of multiple faces. single person, correct face, natural expression' : '2D anime style illustration, colorful, dynamic composition, expressive characters'}
+【画面】英文描述，${state.visualStyle === 'realistic' ? 'IMPORTANT: describe ONLY ONE person in frame, medium shot or wide shot, avoid close-up of multiple faces. single person, correct face, natural expression' : 'IMPORTANT: focus on ONE main character in frame, medium shot preferred, avoid multiple faces close-up. 2D anime style illustration, colorful, dynamic composition, beautiful detailed face'}
 
 场景描写...
 
@@ -163,7 +163,7 @@ async function requestScene(userChoice) {
 function extractPrompt(text) {
   const m = text.match(/【画面】(.+)/);
   const styleP = STYLES[state.visualStyle].prompt;
-  let extra = '';
+  let extra = ', 1girl or 1boy, solo, beautiful detailed face, symmetrical eyes, correct anatomy';
   if (state.visualStyle === 'realistic') {
     extra = ', one person only, medium shot, symmetrical face, looking at camera, centered composition';
   }
