@@ -1,4 +1,4 @@
-// ===== 华夏锋彩 1.0 - AI互动影游 =====
+// ===== 华夏锋彩 1.8 - AI互动影游 =====
 
 const API_URL = '/api/story';
 
@@ -22,7 +22,7 @@ const KB = ['kb-zoom-in','kb-zoom-out','kb-pan-left','kb-pan-right','kb-pan-up',
 let state = {
   genre:'', theme:'', chapter:1, choiceCount:0, history:[],
   sceneCount:0, isTyping:false, imageUrl:null, visualStyle:'3d-anime',
-  imageLoading:false, abortTyping:false,
+  imageLoading:false, abortTyping:false, activeLayer: 0,
 };
 
 // ===== Init =====
@@ -75,12 +75,12 @@ document.getElementById('replay-btn').addEventListener('click', resetGame);
 function startGame() {
   document.getElementById('start-screen').classList.remove('active');
   document.getElementById('game-screen').classList.add('active');
-  
+
   // 真人模式：显示扫描线
   document.getElementById('scanlines').classList.toggle('hidden', state.visualStyle !== 'realistic');
-  
+
   updateStatus();
-  
+
   const styleConfig = STYLES[state.visualStyle];
   const sys = `你是"华夏锋彩"互动影游引擎，创作${styleConfig.label}风格的电影级故事。
 
@@ -116,35 +116,35 @@ function startGame() {
 
 async function requestScene(userChoice) {
   if (state.isTyping) return;
-  
+
   state.history.push({ role: 'user', content: userChoice });
   showLoading();
-  
+
   try {
     const res = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ messages: state.history.slice(-12) }),
     });
-    
+
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     if (data.error) throw new Error(data.error);
-    
+
     const text = data.content;
     state.history.push({ role: 'assistant', content: text });
     state.sceneCount++;
     state.abortTypine = false;
-    
+
     hideLoading();
-    
+
     // 异步生成图片
     const imgP = extractPrompt(text);
     if (imgP) generateImage(imgP);
-    
+
     const isEnd = text.includes('【THE END】') || /【结局[：:]/.test(text);
     await showScene(text, isEnd);
-    
+
   } catch (err) {
     hideLoading();
     state.history.pop();
@@ -164,28 +164,46 @@ function extractPrompt(text) {
 
 function generateImage(prompt) {
   const seed = Date.now();
-  const w = state.visualStyle === 'realistic' ? 1344 : 1344;
-  const h = state.visualStyle === 'realistic' ? 768 : 768;
-  const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${w}&height=${h}&seed=${seed}&nologo=true&model=flux`;
-  state.imageUrl = url;
+  // 降低分辨率：移动端 640x854，桌面端 1024x576
+  const isMobile = window.innerWidth < 768;
+  const w = isMobile ? 640 : 1024;
+  const h = isMobile ? 854 : 576;
+
+  const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${w}&height=${h}&seed=${seed}&nologo=true&model=flux`;
+
+  // 通过服务器代理加载
+  const proxyUrl = `/api/image?url=${encodeURIComponent(pollinationsUrl)}`;
+
+  state.imageUrl = proxyUrl;
   state.imageLoading = true;
-  
-  const el = document.getElementById('scene-image');
-  KB.forEach(c => el.classList.remove(c));
-  el.style.opacity = '0.2';
-  
+
+  const layers = [
+    document.getElementById('img-layer-0'),
+    document.getElementById('img-layer-1'),
+  ];
+  const nextLayer = state.activeLayer === 0 ? 1 : 0;
+
+  // 预加载到非活跃层
   const img = new Image();
   img.onload = () => {
-    el.style.backgroundImage = `url(${url})`;
+    const el = layers[nextLayer];
+    // 移除旧动画
+    KB.forEach(c => el.classList.remove(c));
+    el.style.backgroundImage = `url(${proxyUrl})`;
     el.classList.add(KB[Math.floor(Math.random() * KB.length)]);
+
+    // 交叉淡入
+    layers[state.activeLayer].style.opacity = '0';
     el.style.opacity = '1';
+    state.activeLayer = nextLayer;
     state.imageLoading = false;
   };
   img.onerror = () => {
-    el.style.opacity = '1';
+    // 图片加载失败 — 显示场景名作为背景提示
+    console.warn('Image load failed, using gradient fallback');
     state.imageLoading = false;
   };
-  img.src = url;
+  img.src = proxyUrl;
 }
 
 // ===== Particles =====
@@ -194,7 +212,7 @@ function spawnParticles() {
   box.innerHTML = '';
   const cfgs = STYLES[state.visualStyle].particles;
   const cfg = cfgs[state.genre] || cfgs['自由'];
-  
+
   for (let i = 0; i < cfg.count; i++) {
     const p = document.createElement('div');
     p.className = 'particle';
@@ -208,40 +226,40 @@ function spawnParticles() {
 async function showScene(text, isEnd) {
   state.isTyping = true;
   state.abortTypine = false;
-  
+
   const sceneName = (text.match(/【场景名】(.+)/) || [,''])[1].trim() || `场景 ${state.sceneCount}`;
   const { narrative, choices } = parse(text);
-  
+
   document.getElementById('scene-badge').textContent = sceneName;
   document.getElementById('scene-title').textContent = `第${state.chapter}章 · ${sceneName}`;
-  
+
   const storyEl = document.getElementById('story-text');
   const choicesEl = document.getElementById('choices');
   storyEl.innerHTML = '';
   choicesEl.innerHTML = '';
   storyEl.scrollTop = 0;
-  
+
   spawnParticles();
-  
+
   // Typewriter
   for (let i = 0; i < narrative.length; i++) {
     if (state.abortTypine) break;
-    
+
     storyEl.innerHTML = esc(narrative.substring(0, i + 1)) + '<span class="cursor"></span>';
     storyEl.scrollTop = storyEl.scrollHeight;
-    
+
     const ch = narrative[i];
     if ('。！？…'.includes(ch)) await sleep(150);
     else if ('，、；：\n'.includes(ch)) await sleep(60);
     else await sleep(20);
   }
-  
+
   if (!state.abortTypine) {
     storyEl.innerHTML = esc(narrative);
   }
-  
+
   if (isEnd && !state.abortTypine) { showEnding(narrative, text); return; }
-  
+
   // Choices
   if (!state.abortTypine) {
     for (let i = 0; i < choices.length; i++) {
@@ -257,7 +275,7 @@ async function showScene(text, isEnd) {
       btn.style.transform = 'translateY(0)';
     }
   }
-  
+
   state.isTyping = false;
 }
 
@@ -266,7 +284,7 @@ function parse(text) {
   const re = /\[([A-C])\]\s*(.+)/g;
   let m;
   while ((m = re.exec(text)) !== null) choices.push({ key: m[1], text: m[2].trim() });
-  
+
   const narrative = text
     .replace(/【场景名】.+\n?/, '')
     .replace(/【画面】.+\n?/, '')
@@ -275,7 +293,7 @@ function parse(text) {
     .replace(/【结局[：:].+/g, '')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
-  
+
   return { narrative, choices };
 }
 
@@ -297,15 +315,15 @@ function updateStatus() {
 // ===== Ending =====
 function showEnding(narrative, fullText) {
   state.isTyping = false;
-  
+
   let type = '普通结局', color = '#ffa502';
   if (/好/.test(fullText)) { type = '✨ 好结局'; color = '#2ed573'; }
   else if (/坏/.test(fullText)) { type = '💀 坏结局'; color = '#ff6b6b'; }
-  
+
   if (state.imageUrl) {
     document.getElementById('ending-bg').style.backgroundImage = `url(${state.imageUrl})`;
   }
-  
+
   setTimeout(() => {
     document.getElementById('game-screen').classList.remove('active');
     document.getElementById('ending-screen').classList.add('active');
@@ -320,28 +338,31 @@ function showEnding(narrative, fullText) {
 
 // ===== Reset =====
 function resetGame() {
-  state = { genre:'',theme:'',chapter:1,choiceCount:0,history:[],sceneCount:0,isTyping:false,imageUrl:null,visualStyle:state.visualStyle,imageLoading:false,abortTypine:false };
-  
+  state = { genre:'',theme:'',chapter:1,choiceCount:0,history:[],sceneCount:0,isTyping:false,imageUrl:null,visualStyle:state.visualStyle,imageLoading:false,abortTypine:false,activeLayer:0 };
+
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('start-screen').classList.add('active');
   document.getElementById('custom-theme').classList.add('hidden');
   document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('selected'));
   document.getElementById('start-btn').disabled = true;
   document.getElementById('theme-input').value = '';
-  
-  const si = document.getElementById('scene-image');
-  KB.forEach(c => si.classList.remove(c));
-  si.style.backgroundImage = '';
-  si.style.opacity = '1';
+
+  // Reset image layers
+  document.querySelectorAll('.img-layer').forEach(el => {
+    KB.forEach(c => el.classList.remove(c));
+    el.style.backgroundImage = '';
+    el.style.opacity = '0';
+  });
+  document.getElementById('img-layer-0').style.opacity = '1';
   document.getElementById('particles').innerHTML = '';
   document.getElementById('scanlines').classList.add('hidden');
 }
 
 // ===== Share =====
 function shareResult() {
-  const t = `🎬 我在华夏锋彩1.0中做出${state.choiceCount}次选择，经历了${state.sceneCount}个场景！`;
+  const t = `🎬 我在华夏锋彩1.8中做出${state.choiceCount}次选择，经历了${state.sceneCount}个场景！`;
   if (navigator.share) {
-    navigator.share({ title: '华夏锋彩1.0', text: t, url: location.href }).catch(() => {});
+    navigator.share({ title: '华夏锋彩1.8', text: t, url: location.href }).catch(() => {});
   } else {
     navigator.clipboard.writeText(t + ' ' + location.href).then(() => alert('已复制！')).catch(() => {});
   }
